@@ -1,0 +1,10 @@
+[package]
+name = "mips_rt"
+version = "0.1.0"
+authors = ["Kiffie van Haash"]
+edition = "2018"
+
+[dependencies]
+r0 = "0.2.2"
+bare-metal = "0.2.4"
+
