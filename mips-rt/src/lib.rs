@@ -40,3 +40,15 @@ pub unsafe extern "C" fn rust_reset() -> ! {
 pub unsafe extern "C" fn DefaultPreInit() {}
 
 pub mod interrupt;
+
+/// Returns a pointer to the start of the heap
+///
+/// The returned pointer is guaranteed to be 4-byte aligned.
+#[inline]
+pub fn heap_start() -> *mut u32 {
+    extern "C" {
+        static mut __sheap: u32;
+    }
+
+    unsafe { &mut __sheap }
+}
