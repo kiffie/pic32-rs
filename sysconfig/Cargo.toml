@@ -1,0 +1,7 @@
+[package]
+name = "sysconfig"
+version = "0.1.0"
+authors = ["Kiffie van Haash"]
+edition = "2018"
+
+[dependencies]
