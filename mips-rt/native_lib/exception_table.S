@@ -25,7 +25,7 @@ _gen_exception:
 .end _gen_exception
 
 # vector 0
-.weak _vector_0_fn, _vector_0_j
+.weak _vector_0_fn, _vector_0_context
 _vector_0_fn = _default_isr_fn
 _vector_0_context  = _isr_context
 .section .vector_0, "ax"
@@ -37,7 +37,7 @@ _vector_0:
 .end _vector_0
 
 # vector 1
-.weak _vector_1_fn, _vector_1_j
+.weak _vector_1_fn, _vector_1_context
 _vector_1_fn = _default_isr_fn
 _vector_1_context  = _isr_context
 .section .vector_1, "ax"
@@ -49,7 +49,7 @@ _vector_1:
 .end _vector_1
 
 # vector 2
-.weak _vector_2_fn, _vector_2_j
+.weak _vector_2_fn, _vector_2_context
 _vector_2_fn = _default_isr_fn
 _vector_2_context  = _isr_context
 .section .vector_2, "ax"
@@ -61,7 +61,7 @@ _vector_2:
 .end _vector_2
 
 # vector 3
-.weak _vector_3_fn, _vector_3_j
+.weak _vector_3_fn, _vector_3_context
 _vector_3_fn = _default_isr_fn
 _vector_3_context  = _isr_context
 .section .vector_3, "ax"
@@ -73,7 +73,7 @@ _vector_3:
 .end _vector_3
 
 # vector 4
-.weak _vector_4_fn, _vector_4_j
+.weak _vector_4_fn, _vector_4_context
 _vector_4_fn = _default_isr_fn
 _vector_4_context  = _isr_context
 .section .vector_4, "ax"
@@ -85,7 +85,7 @@ _vector_4:
 .end _vector_4
 
 # vector 5
-.weak _vector_5_fn, _vector_5_j
+.weak _vector_5_fn, _vector_5_context
 _vector_5_fn = _default_isr_fn
 _vector_5_context  = _isr_context
 .section .vector_5, "ax"
@@ -97,7 +97,7 @@ _vector_5:
 .end _vector_5
 
 # vector 6
-.weak _vector_6_fn, _vector_6_j
+.weak _vector_6_fn, _vector_6_context
 _vector_6_fn = _default_isr_fn
 _vector_6_context  = _isr_context
 .section .vector_6, "ax"
@@ -109,7 +109,7 @@ _vector_6:
 .end _vector_6
 
 # vector 7
-.weak _vector_7_fn, _vector_7_j
+.weak _vector_7_fn, _vector_7_context
 _vector_7_fn = _default_isr_fn
 _vector_7_context  = _isr_context
 .section .vector_7, "ax"
@@ -121,7 +121,7 @@ _vector_7:
 .end _vector_7
 
 # vector 8
-.weak _vector_8_fn, _vector_8_j
+.weak _vector_8_fn, _vector_8_context
 _vector_8_fn = _default_isr_fn
 _vector_8_context  = _isr_context
 .section .vector_8, "ax"
@@ -133,7 +133,7 @@ _vector_8:
 .end _vector_8
 
 # vector 9
-.weak _vector_9_fn, _vector_9_j
+.weak _vector_9_fn, _vector_9_context
 _vector_9_fn = _default_isr_fn
 _vector_9_context  = _isr_context
 .section .vector_9, "ax"
@@ -145,7 +145,7 @@ _vector_9:
 .end _vector_9
 
 # vector 10
-.weak _vector_10_fn, _vector_10_j
+.weak _vector_10_fn, _vector_10_context
 _vector_10_fn = _default_isr_fn
 _vector_10_context  = _isr_context
 .section .vector_10, "ax"
@@ -157,7 +157,7 @@ _vector_10:
 .end _vector_10
 
 # vector 11
-.weak _vector_11_fn, _vector_11_j
+.weak _vector_11_fn, _vector_11_context
 _vector_11_fn = _default_isr_fn
 _vector_11_context  = _isr_context
 .section .vector_11, "ax"
@@ -169,7 +169,7 @@ _vector_11:
 .end _vector_11
 
 # vector 12
-.weak _vector_12_fn, _vector_12_j
+.weak _vector_12_fn, _vector_12_context
 _vector_12_fn = _default_isr_fn
 _vector_12_context  = _isr_context
 .section .vector_12, "ax"
@@ -181,7 +181,7 @@ _vector_12:
 .end _vector_12
 
 # vector 13
-.weak _vector_13_fn, _vector_13_j
+.weak _vector_13_fn, _vector_13_context
 _vector_13_fn = _default_isr_fn
 _vector_13_context  = _isr_context
 .section .vector_13, "ax"
@@ -193,7 +193,7 @@ _vector_13:
 .end _vector_13
 
 # vector 14
-.weak _vector_14_fn, _vector_14_j
+.weak _vector_14_fn, _vector_14_context
 _vector_14_fn = _default_isr_fn
 _vector_14_context  = _isr_context
 .section .vector_14, "ax"
@@ -205,7 +205,7 @@ _vector_14:
 .end _vector_14
 
 # vector 15
-.weak _vector_15_fn, _vector_15_j
+.weak _vector_15_fn, _vector_15_context
 _vector_15_fn = _default_isr_fn
 _vector_15_context  = _isr_context
 .section .vector_15, "ax"
@@ -217,7 +217,7 @@ _vector_15:
 .end _vector_15
 
 # vector 16
-.weak _vector_16_fn, _vector_16_j
+.weak _vector_16_fn, _vector_16_context
 _vector_16_fn = _default_isr_fn
 _vector_16_context  = _isr_context
 .section .vector_16, "ax"
@@ -229,7 +229,7 @@ _vector_16:
 .end _vector_16
 
 # vector 17
-.weak _vector_17_fn, _vector_17_j
+.weak _vector_17_fn, _vector_17_context
 _vector_17_fn = _default_isr_fn
 _vector_17_context  = _isr_context
 .section .vector_17, "ax"
@@ -241,7 +241,7 @@ _vector_17:
 .end _vector_17
 
 # vector 18
-.weak _vector_18_fn, _vector_18_j
+.weak _vector_18_fn, _vector_18_context
 _vector_18_fn = _default_isr_fn
 _vector_18_context  = _isr_context
 .section .vector_18, "ax"
@@ -253,7 +253,7 @@ _vector_18:
 .end _vector_18
 
 # vector 19
-.weak _vector_19_fn, _vector_19_j
+.weak _vector_19_fn, _vector_19_context
 _vector_19_fn = _default_isr_fn
 _vector_19_context  = _isr_context
 .section .vector_19, "ax"
@@ -265,7 +265,7 @@ _vector_19:
 .end _vector_19
 
 # vector 20
-.weak _vector_20_fn, _vector_20_j
+.weak _vector_20_fn, _vector_20_context
 _vector_20_fn = _default_isr_fn
 _vector_20_context  = _isr_context
 .section .vector_20, "ax"
@@ -277,7 +277,7 @@ _vector_20:
 .end _vector_20
 
 # vector 21
-.weak _vector_21_fn, _vector_21_j
+.weak _vector_21_fn, _vector_21_context
 _vector_21_fn = _default_isr_fn
 _vector_21_context  = _isr_context
 .section .vector_21, "ax"
@@ -289,7 +289,7 @@ _vector_21:
 .end _vector_21
 
 # vector 22
-.weak _vector_22_fn, _vector_22_j
+.weak _vector_22_fn, _vector_22_context
 _vector_22_fn = _default_isr_fn
 _vector_22_context  = _isr_context
 .section .vector_22, "ax"
@@ -301,7 +301,7 @@ _vector_22:
 .end _vector_22
 
 # vector 23
-.weak _vector_23_fn, _vector_23_j
+.weak _vector_23_fn, _vector_23_context
 _vector_23_fn = _default_isr_fn
 _vector_23_context  = _isr_context
 .section .vector_23, "ax"
@@ -313,7 +313,7 @@ _vector_23:
 .end _vector_23
 
 # vector 24
-.weak _vector_24_fn, _vector_24_j
+.weak _vector_24_fn, _vector_24_context
 _vector_24_fn = _default_isr_fn
 _vector_24_context  = _isr_context
 .section .vector_24, "ax"
@@ -325,7 +325,7 @@ _vector_24:
 .end _vector_24
 
 # vector 25
-.weak _vector_25_fn, _vector_25_j
+.weak _vector_25_fn, _vector_25_context
 _vector_25_fn = _default_isr_fn
 _vector_25_context  = _isr_context
 .section .vector_25, "ax"
@@ -337,7 +337,7 @@ _vector_25:
 .end _vector_25
 
 # vector 26
-.weak _vector_26_fn, _vector_26_j
+.weak _vector_26_fn, _vector_26_context
 _vector_26_fn = _default_isr_fn
 _vector_26_context  = _isr_context
 .section .vector_26, "ax"
@@ -349,7 +349,7 @@ _vector_26:
 .end _vector_26
 
 # vector 27
-.weak _vector_27_fn, _vector_27_j
+.weak _vector_27_fn, _vector_27_context
 _vector_27_fn = _default_isr_fn
 _vector_27_context  = _isr_context
 .section .vector_27, "ax"
@@ -361,7 +361,7 @@ _vector_27:
 .end _vector_27
 
 # vector 28
-.weak _vector_28_fn, _vector_28_j
+.weak _vector_28_fn, _vector_28_context
 _vector_28_fn = _default_isr_fn
 _vector_28_context  = _isr_context
 .section .vector_28, "ax"
@@ -373,7 +373,7 @@ _vector_28:
 .end _vector_28
 
 # vector 29
-.weak _vector_29_fn, _vector_29_j
+.weak _vector_29_fn, _vector_29_context
 _vector_29_fn = _default_isr_fn
 _vector_29_context  = _isr_context
 .section .vector_29, "ax"
@@ -385,7 +385,7 @@ _vector_29:
 .end _vector_29
 
 # vector 30
-.weak _vector_30_fn, _vector_30_j
+.weak _vector_30_fn, _vector_30_context
 _vector_30_fn = _default_isr_fn
 _vector_30_context  = _isr_context
 .section .vector_30, "ax"
@@ -397,7 +397,7 @@ _vector_30:
 .end _vector_30
 
 # vector 31
-.weak _vector_31_fn, _vector_31_j
+.weak _vector_31_fn, _vector_31_context
 _vector_31_fn = _default_isr_fn
 _vector_31_context  = _isr_context
 .section .vector_31, "ax"
@@ -409,7 +409,7 @@ _vector_31:
 .end _vector_31
 
 # vector 32
-.weak _vector_32_fn, _vector_32_j
+.weak _vector_32_fn, _vector_32_context
 _vector_32_fn = _default_isr_fn
 _vector_32_context  = _isr_context
 .section .vector_32, "ax"
@@ -421,7 +421,7 @@ _vector_32:
 .end _vector_32
 
 # vector 33
-.weak _vector_33_fn, _vector_33_j
+.weak _vector_33_fn, _vector_33_context
 _vector_33_fn = _default_isr_fn
 _vector_33_context  = _isr_context
 .section .vector_33, "ax"
@@ -433,7 +433,7 @@ _vector_33:
 .end _vector_33
 
 # vector 34
-.weak _vector_34_fn, _vector_34_j
+.weak _vector_34_fn, _vector_34_context
 _vector_34_fn = _default_isr_fn
 _vector_34_context  = _isr_context
 .section .vector_34, "ax"
@@ -445,7 +445,7 @@ _vector_34:
 .end _vector_34
 
 # vector 35
-.weak _vector_35_fn, _vector_35_j
+.weak _vector_35_fn, _vector_35_context
 _vector_35_fn = _default_isr_fn
 _vector_35_context  = _isr_context
 .section .vector_35, "ax"
@@ -457,7 +457,7 @@ _vector_35:
 .end _vector_35
 
 # vector 36
-.weak _vector_36_fn, _vector_36_j
+.weak _vector_36_fn, _vector_36_context
 _vector_36_fn = _default_isr_fn
 _vector_36_context  = _isr_context
 .section .vector_36, "ax"
@@ -469,7 +469,7 @@ _vector_36:
 .end _vector_36
 
 # vector 37
-.weak _vector_37_fn, _vector_37_j
+.weak _vector_37_fn, _vector_37_context
 _vector_37_fn = _default_isr_fn
 _vector_37_context  = _isr_context
 .section .vector_37, "ax"
@@ -481,7 +481,7 @@ _vector_37:
 .end _vector_37
 
 # vector 38
-.weak _vector_38_fn, _vector_38_j
+.weak _vector_38_fn, _vector_38_context
 _vector_38_fn = _default_isr_fn
 _vector_38_context  = _isr_context
 .section .vector_38, "ax"
@@ -493,7 +493,7 @@ _vector_38:
 .end _vector_38
 
 # vector 39
-.weak _vector_39_fn, _vector_39_j
+.weak _vector_39_fn, _vector_39_context
 _vector_39_fn = _default_isr_fn
 _vector_39_context  = _isr_context
 .section .vector_39, "ax"
@@ -505,7 +505,7 @@ _vector_39:
 .end _vector_39
 
 # vector 40
-.weak _vector_40_fn, _vector_40_j
+.weak _vector_40_fn, _vector_40_context
 _vector_40_fn = _default_isr_fn
 _vector_40_context  = _isr_context
 .section .vector_40, "ax"
@@ -517,7 +517,7 @@ _vector_40:
 .end _vector_40
 
 # vector 41
-.weak _vector_41_fn, _vector_41_j
+.weak _vector_41_fn, _vector_41_context
 _vector_41_fn = _default_isr_fn
 _vector_41_context  = _isr_context
 .section .vector_41, "ax"
@@ -529,7 +529,7 @@ _vector_41:
 .end _vector_41
 
 # vector 42
-.weak _vector_42_fn, _vector_42_j
+.weak _vector_42_fn, _vector_42_context
 _vector_42_fn = _default_isr_fn
 _vector_42_context  = _isr_context
 .section .vector_42, "ax"
@@ -541,7 +541,7 @@ _vector_42:
 .end _vector_42
 
 # vector 43
-.weak _vector_43_fn, _vector_43_j
+.weak _vector_43_fn, _vector_43_context
 _vector_43_fn = _default_isr_fn
 _vector_43_context  = _isr_context
 .section .vector_43, "ax"
@@ -553,7 +553,7 @@ _vector_43:
 .end _vector_43
 
 # vector 44
-.weak _vector_44_fn, _vector_44_j
+.weak _vector_44_fn, _vector_44_context
 _vector_44_fn = _default_isr_fn
 _vector_44_context  = _isr_context
 .section .vector_44, "ax"
@@ -565,7 +565,7 @@ _vector_44:
 .end _vector_44
 
 # vector 45
-.weak _vector_45_fn, _vector_45_j
+.weak _vector_45_fn, _vector_45_context
 _vector_45_fn = _default_isr_fn
 _vector_45_context  = _isr_context
 .section .vector_45, "ax"
@@ -577,7 +577,7 @@ _vector_45:
 .end _vector_45
 
 # vector 46
-.weak _vector_46_fn, _vector_46_j
+.weak _vector_46_fn, _vector_46_context
 _vector_46_fn = _default_isr_fn
 _vector_46_context  = _isr_context
 .section .vector_46, "ax"
@@ -589,7 +589,7 @@ _vector_46:
 .end _vector_46
 
 # vector 47
-.weak _vector_47_fn, _vector_47_j
+.weak _vector_47_fn, _vector_47_context
 _vector_47_fn = _default_isr_fn
 _vector_47_context  = _isr_context
 .section .vector_47, "ax"
@@ -601,7 +601,7 @@ _vector_47:
 .end _vector_47
 
 # vector 48
-.weak _vector_48_fn, _vector_48_j
+.weak _vector_48_fn, _vector_48_context
 _vector_48_fn = _default_isr_fn
 _vector_48_context  = _isr_context
 .section .vector_48, "ax"
@@ -613,7 +613,7 @@ _vector_48:
 .end _vector_48
 
 # vector 49
-.weak _vector_49_fn, _vector_49_j
+.weak _vector_49_fn, _vector_49_context
 _vector_49_fn = _default_isr_fn
 _vector_49_context  = _isr_context
 .section .vector_49, "ax"
@@ -625,7 +625,7 @@ _vector_49:
 .end _vector_49
 
 # vector 50
-.weak _vector_50_fn, _vector_50_j
+.weak _vector_50_fn, _vector_50_context
 _vector_50_fn = _default_isr_fn
 _vector_50_context  = _isr_context
 .section .vector_50, "ax"
@@ -637,7 +637,7 @@ _vector_50:
 .end _vector_50
 
 # vector 51
-.weak _vector_51_fn, _vector_51_j
+.weak _vector_51_fn, _vector_51_context
 _vector_51_fn = _default_isr_fn
 _vector_51_context  = _isr_context
 .section .vector_51, "ax"
@@ -649,7 +649,7 @@ _vector_51:
 .end _vector_51
 
 # vector 52
-.weak _vector_52_fn, _vector_52_j
+.weak _vector_52_fn, _vector_52_context
 _vector_52_fn = _default_isr_fn
 _vector_52_context  = _isr_context
 .section .vector_52, "ax"
@@ -661,7 +661,7 @@ _vector_52:
 .end _vector_52
 
 # vector 53
-.weak _vector_53_fn, _vector_53_j
+.weak _vector_53_fn, _vector_53_context
 _vector_53_fn = _default_isr_fn
 _vector_53_context  = _isr_context
 .section .vector_53, "ax"
@@ -673,7 +673,7 @@ _vector_53:
 .end _vector_53
 
 # vector 54
-.weak _vector_54_fn, _vector_54_j
+.weak _vector_54_fn, _vector_54_context
 _vector_54_fn = _default_isr_fn
 _vector_54_context  = _isr_context
 .section .vector_54, "ax"
@@ -685,7 +685,7 @@ _vector_54:
 .end _vector_54
 
 # vector 55
-.weak _vector_55_fn, _vector_55_j
+.weak _vector_55_fn, _vector_55_context
 _vector_55_fn = _default_isr_fn
 _vector_55_context  = _isr_context
 .section .vector_55, "ax"
@@ -697,7 +697,7 @@ _vector_55:
 .end _vector_55
 
 # vector 56
-.weak _vector_56_fn, _vector_56_j
+.weak _vector_56_fn, _vector_56_context
 _vector_56_fn = _default_isr_fn
 _vector_56_context  = _isr_context
 .section .vector_56, "ax"
@@ -709,7 +709,7 @@ _vector_56:
 .end _vector_56
 
 # vector 57
-.weak _vector_57_fn, _vector_57_j
+.weak _vector_57_fn, _vector_57_context
 _vector_57_fn = _default_isr_fn
 _vector_57_context  = _isr_context
 .section .vector_57, "ax"
@@ -721,7 +721,7 @@ _vector_57:
 .end _vector_57
 
 # vector 58
-.weak _vector_58_fn, _vector_58_j
+.weak _vector_58_fn, _vector_58_context
 _vector_58_fn = _default_isr_fn
 _vector_58_context  = _isr_context
 .section .vector_58, "ax"
@@ -733,7 +733,7 @@ _vector_58:
 .end _vector_58
 
 # vector 59
-.weak _vector_59_fn, _vector_59_j
+.weak _vector_59_fn, _vector_59_context
 _vector_59_fn = _default_isr_fn
 _vector_59_context  = _isr_context
 .section .vector_59, "ax"
@@ -745,7 +745,7 @@ _vector_59:
 .end _vector_59
 
 # vector 60
-.weak _vector_60_fn, _vector_60_j
+.weak _vector_60_fn, _vector_60_context
 _vector_60_fn = _default_isr_fn
 _vector_60_context  = _isr_context
 .section .vector_60, "ax"
@@ -757,7 +757,7 @@ _vector_60:
 .end _vector_60
 
 # vector 61
-.weak _vector_61_fn, _vector_61_j
+.weak _vector_61_fn, _vector_61_context
 _vector_61_fn = _default_isr_fn
 _vector_61_context  = _isr_context
 .section .vector_61, "ax"
@@ -769,7 +769,7 @@ _vector_61:
 .end _vector_61
 
 # vector 62
-.weak _vector_62_fn, _vector_62_j
+.weak _vector_62_fn, _vector_62_context
 _vector_62_fn = _default_isr_fn
 _vector_62_context  = _isr_context
 .section .vector_62, "ax"
@@ -781,7 +781,7 @@ _vector_62:
 .end _vector_62
 
 # vector 63
-.weak _vector_63_fn, _vector_63_j
+.weak _vector_63_fn, _vector_63_context
 _vector_63_fn = _default_isr_fn
 _vector_63_context  = _isr_context
 .section .vector_63, "ax"

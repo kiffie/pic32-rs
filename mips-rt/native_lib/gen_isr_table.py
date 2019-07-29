@@ -5,7 +5,7 @@
 
 vect_fmt = '''\
 # vector {0}
-.weak _vector_{0}_fn, _vector_{0}_j
+.weak _vector_{0}_fn, _vector_{0}_context
 _vector_{0}_fn = _default_isr_fn
 _vector_{0}_context  = _isr_context
 .section .vector_{0}, "ax"
