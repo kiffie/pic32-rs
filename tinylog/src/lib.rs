@@ -4,16 +4,9 @@
 
 use core;
 use core::fmt;
+use core::fmt::Write;
 
-static mut LOGGER: &'static Log = &NullLog;
-
-struct NullLog;
-
-impl Log for NullLog {
-
-    fn log(&self, _: fmt::Arguments){}
-    fn flush(&self){}
-}
+static mut LOGGER: Option<Log> = None;
 
 /// An enum representing the available verbosity levels of the logger.
 ///
@@ -46,27 +39,54 @@ pub enum Level {
     Trace,
 }
 
-pub trait Log: Sync + Send {
+pub struct Log {
 
-    /// Logs unstructured text without using a `Record`
-    fn log(&self, message: fmt::Arguments);
+    bwrite_all: Option<fn(&[u8])>, 
+}
 
-    /// Flushes any buffered records.
-    fn flush(&self);
+impl Log {
+
+    pub fn new(bwrite_all: fn(&[u8])) -> Log {
+        Log{ bwrite_all: Some(bwrite_all) }
+    }
+
+    pub fn set_bwrite_all(&mut self, bwrite_all: fn(&[u8])){
+        self.bwrite_all = Some(bwrite_all);
+    }
+
+
+    fn log(&mut self, args: core::fmt::Arguments){
+        writeln!(self, "{}", args).unwrap();
+    }
+}
+
+impl Write for Log {
+
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        if let Some(bw) = self.bwrite_all {
+            bw(s.as_bytes());
+        }
+        Ok(())
+    }
 }
 
 
-pub fn set_logger(logger: &'static Log){
-    unsafe { LOGGER = logger; }
+pub fn set_bwrite_all(bwrite_all: fn(&[u8])){
+
+    unsafe {
+        LOGGER = Some(Log::new(bwrite_all));
+    }
 }
 
 pub fn __private_api_log(
     args: fmt::Arguments,
     _level: Level,
-    &(_target, module_path, file, line): &(&str, &str, &str, u32))
+    &(module_path, line): &(&str, u32))
 {
     unsafe {
-        LOGGER.log(format_args!("[{}/{}:{}] {}", module_path, file, line, args));
+        if let Some(ref mut l) = LOGGER {
+            l.log(format_args!("[{}:{}] {}", module_path, line, args));
+        }
     }
 }
 
@@ -100,7 +120,7 @@ macro_rules! log {
             $crate::__private_api_log(
                 format_args!($($arg)+),
                 lvl,
-                &($target, module_path!(), file!(), line!()),
+                &(module_path!(), line!()),
             );
         }
     });
