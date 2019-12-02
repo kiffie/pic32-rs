@@ -3,6 +3,7 @@
 use core::fmt::Write;
 use vcell::VolatileCell;
 use nb;
+use crate::clock;
 
 #[repr(C)]
 struct RegisterBlock {
@@ -74,13 +75,10 @@ impl Uart {
         }
     }
 
-    pub fn init(&self,
-               pb_clock: u32,
-               baud_rate: u32)
-    {
+    pub fn init(&self, baud_rate: u32){
         let regs : &RegisterBlock = unsafe { &*self.reg_ptr };
         regs.mode.set(0);
-        let brg = pb_clock/(4*baud_rate)-1;
+        let brg = clock::pb_clock()/(4*baud_rate)-1;
         regs.mode.set(MODE_BRGH_MASK);
         regs.sta.set(STA_URXEN_MASK |
                      STA_UTXEN_MASK |

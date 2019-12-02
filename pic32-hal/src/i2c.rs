@@ -2,6 +2,7 @@
 
 use vcell::VolatileCell;
 use embedded_hal::blocking;
+use crate::clock;
 
 #[repr(C)]
 pub struct RegisterBlock {
@@ -79,8 +80,9 @@ impl I2c {
         }
     }
 
-    pub fn init(&mut self, pb_clock: u32, fsck: Fscl) {
+    pub fn init(&mut self, fsck: Fscl) {
         let regs : &RegisterBlock = unsafe { &*self.reg_ptr };
+        let pb_clock = clock::pb_clock();
         let divisor = fsck as u32;
 
         self.transaction_ongoing = false;
