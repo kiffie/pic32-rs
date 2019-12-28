@@ -34,7 +34,7 @@ macro_rules! uart_impl {
                     uart.mode.write(|w| w.brgh().bit(true));
                     uart.sta
                         .write(|w| w.urxen().bit(true).utxen().bit(true).urxisel().bits(0b10));
-                    uart.brg.write(|w| w.brg().bits(brg));
+                    uart.brg.write(|w| w.bits(brg));
                     uart.modeset.write(|w| w.on().bit(true));
                 }
                 Uart { _uart: PhantomData }
