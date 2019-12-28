@@ -1,60 +1,12 @@
 /// I2C driver for PIC32
 
-use vcell::VolatileCell;
 use embedded_hal::blocking;
-use crate::clock;
+use crate::pac::{I2C1, I2C2};
+use crate::time::Hertz;
 
-#[repr(C)]
-pub struct RegisterBlock {
-    pub con:        VolatileCell<u32>,
-    pub conclr:     VolatileCell<u32>,
-    pub conset:     VolatileCell<u32>,
-    pub coninv:     VolatileCell<u32>,
-    pub stat:       VolatileCell<u32>,
-    pub statclr:    VolatileCell<u32>,
-    pub statset:    VolatileCell<u32>,
-    pub statinv:    VolatileCell<u32>,
-    pub add:        VolatileCell<u32>,
-    pub addclr:     VolatileCell<u32>,
-    pub addset:     VolatileCell<u32>,
-    pub addinv:     VolatileCell<u32>,
-    pub msk:        VolatileCell<u32>,
-    pub mskclr:     VolatileCell<u32>,
-    pub mskset:     VolatileCell<u32>,
-    pub mskinv:     VolatileCell<u32>,
-    pub brg:        VolatileCell<u32>,
-    pub brgclr:     VolatileCell<u32>,
-    pub brgset:     VolatileCell<u32>,
-    pub brginv:     VolatileCell<u32>,
-    pub trn:        VolatileCell<u32>,
-    pub trnclr:     VolatileCell<u32>,
-    pub trnset:     VolatileCell<u32>,
-    pub trninv:     VolatileCell<u32>,
-    pub rcv:        VolatileCell<u32>,
-}
-
-const CON_SEN_MASK: u32         = 0x00000001;
-const CON_RSEN_MASK: u32        = 0x00000002;
-const CON_PEN_MASK: u32         = 0x00000004;
-const CON_RCEN_MASK: u32        = 0x00000008;
-const CON_ACKEN_MASK: u32       = 0x00000010;
-const CON_ACKDT_MASK: u32       = 0x00000020;
-const CON_DISSLW_MASK: u32      = 0x00000200;
-const CON_ON_MASK: u32          = 0x00008000;
-const STAT_TRSTAT_MASK: u32     = 0x00004000;
-const STAT_ACKSTAT_MASK: u32    = 0x00008000;
-
-
-// The values of this enum correspond to the base address of the I2C modules
-#[allow(dead_code)]
-#[repr(usize)]
-pub enum HwModule {
-    I2C1 = 0xbf80_5000,
-    I2C2 = 0xbf80_5100,
-}
-
-// The values of this enum correspond to the divisor values mentioned in the
-// reference manual
+/// I2C clock frequency specifier
+/// The values of this enum correspond to the divisor values mentioned in the
+/// reference manual
 #[repr(u32)]
 pub enum Fscl {
     F100KHZ  = 204248,
@@ -62,123 +14,128 @@ pub enum Fscl {
     F1000KHZ = 2525253,
 }
 
-pub struct I2c {
-    reg_ptr: *const RegisterBlock,
+/// An I2C driver for the PIC32. Contains primitives `transmit()`, `receive()`, 
+/// `rstart()`, `stop()` that can be called one after another to build complex
+/// I2C transaction. A Transaction must be started with `transmit()` and
+/// concluded with `stop()`
+pub struct I2c<I2C> {
+    i2c: I2C,
     transaction_ongoing: bool,
 }
 
+macro_rules! i2c_impl {
+    ($Id:ident, $I2c:ident) => {
 
-impl I2c {
+    impl I2c<$I2c> {
 
-    pub const fn new(i2c: HwModule) -> I2c {
-        // calculate base address
-        let i2c_addr = i2c as usize;
-        let reg_ptr = i2c_addr as *const RegisterBlock;
-        I2c {
-            reg_ptr: reg_ptr,
-            transaction_ongoing: false,
+        /// Create a new I2C object
+        pub fn $Id(i2c: $I2c, pb_clock: Hertz, fscl: Fscl) -> I2c<$I2c> {
+
+            let divisor = fscl as u32;
+            let round = if pb_clock.0 % divisor > divisor/2 { 1 } else { 0 };
+            let brg = pb_clock.0 / divisor - 2 + round;
+            unsafe {
+                i2c.brg.write(|w| w.brg().bits(brg as u16));
+                // disable slew rate control, see PIC32MX1xx/2xxx Silicon Errata, item 17
+                i2c.con.write(|w| w.on().bit(true).disslw().bit(true));
+            }
+            I2c { i2c, transaction_ongoing: false }
         }
-    }
 
-    pub fn init(&mut self, fsck: Fscl) {
-        let regs : &RegisterBlock = unsafe { &*self.reg_ptr };
-        let pb_clock = clock::pb_clock();
-        let divisor = fsck as u32;
-
-        self.transaction_ongoing = false;
-        let round = if pb_clock % divisor > divisor/2 { 1 } else { 0 };
-        let brg = pb_clock/divisor - 2 + round;
-        regs.brg.set(brg);
-        // disable slew rate control, see PIC32MX1xx/2xxx Silicon Errata, item 17
-        regs.con.set(CON_ON_MASK | CON_DISSLW_MASK);
-    }
-
-    fn i2c_busy(&self) -> bool {
-        let regs : &RegisterBlock = unsafe { &*self.reg_ptr };
-        regs.con.get() & 0x1f != 0
-    }
-
-    pub fn transmit(&mut self, data: &[u8]) -> Result<(),()> {
-        let regs : &RegisterBlock = unsafe { &*self.reg_ptr };
-        if !self.transaction_ongoing {
-            while self.i2c_busy(){};
-            regs.conset.set(CON_SEN_MASK); // generate start condition
-            self.transaction_ongoing = true;
+        fn i2c_busy(&self) -> bool {
+            (self.i2c.con.read().bits() & 0x1f) != 0
         }
-        for byte in data {
-            while self.i2c_busy(){};
-            regs.trn.set(*byte as u32);
-            // wait until TX complete
-            while regs.stat.get() & STAT_TRSTAT_MASK != 0 {};
-            if regs.stat.get() & STAT_ACKSTAT_MASK != 0 { // NACK
-                self.stop();
+
+        /// Transmit data over the bus. Generate a START condition if called
+        /// fist during a transaction.
+        pub fn transmit(&mut self, data: &[u8]) -> Result<(),()> {
+            if !self.transaction_ongoing {
+                while self.i2c_busy(){};
+                // generate start condition
+                self.i2c.conset.write(|w| w.sen().bit(true));
+                self.transaction_ongoing = true;
+            }
+            for byte in data {
+                while self.i2c_busy(){};
+                unsafe { self.i2c.trn.write(|w| w.trn().bits(*byte)) };
+                // wait until TX complete
+                while self.i2c.stat.read().trstat().bit() {};
+                // check for NACK
+                if self.i2c.stat.read().ackstat().bit() {
+                    self.stop();
+                    return Err(());
+                }
+            }
+            Ok(())
+        }
+
+        /// Generate a repeated start condition
+        /// A transaction must be started before calling this functions
+        pub fn rstart(&self) -> Result<(),()> {
+            if self.transaction_ongoing {
+                while self.i2c_busy(){};
+                self.i2c.conset.write(|w| w.rsen().bit(true));
+                Ok(())
+            }else{
+                Err(())
+            }
+        }
+
+        /// Generate a stop condition and terminate the I2C transfer
+        pub fn stop(&mut self) {
+            while self.i2c_busy() {}
+            self.i2c.conset.write(|w| w.pen().bit(true));
+            self.transaction_ongoing = false;
+        }
+
+        /// Receive data.len() bytes. nack_last determines whether a NACK shall
+        /// be created after the reception of the last byte
+        /// A transaction must be started before calling this function
+        pub fn receive(&mut self, data: &mut[u8], nack_last: bool) -> Result<(),()> {
+            if !self.transaction_ongoing {
                 return Err(());
             }
-        }
-        Ok(())
-    }
-
-    //generate repeated start condition
-    pub fn rstart(&self) -> Result<(),()> {
-        let regs : &RegisterBlock = unsafe { &*self.reg_ptr };
-        if self.transaction_ongoing {
-            while self.i2c_busy(){};
-            regs.conset.set(CON_RSEN_MASK);
-            Ok(())
-        }else{
-            Err(())
-        }
-    }
-
-    pub fn stop(&mut self) {
-        let regs : &RegisterBlock = unsafe { &*self.reg_ptr };
-        while self.i2c_busy() {}
-        regs.conset.set(CON_PEN_MASK);
-        self.transaction_ongoing = false;
-    }
-
-    pub fn receive(&mut self, data: &mut[u8], nack_last: bool) -> Result<(),()> {
-        let regs : &RegisterBlock = unsafe { &*self.reg_ptr };
-        if !self.transaction_ongoing {
-            return Err(());
-        }
-        let len = data.len();
-        for (i, byte) in data.iter_mut().enumerate() {
-            while self.i2c_busy(){};
-            regs.conset.set(CON_RCEN_MASK);
-            while self.i2c_busy(){};
-            *byte = regs.rcv.get() as u8;
-            if (i == len - 1) && nack_last { // NACK for last byte
-                regs.conset.set(CON_ACKDT_MASK);
-            }else{
-                regs.conclr.set(CON_ACKDT_MASK);
+            let len = data.len();
+            for (i, byte) in data.iter_mut().enumerate() {
+                while self.i2c_busy(){};
+                self.i2c.conset.write(|w| w.rcen().bit(true));
+                while self.i2c_busy() { }
+                *byte = self.i2c.rcv.read().rcv().bits();
+                if (i == len - 1) && nack_last { // NACK for last byte
+                    self.i2c.conset.write(|w| w.ackdt().bit(true));
+                }else{
+                    self.i2c.conclr.write(|w| w.ackdt().bit(true));
+                }
+                self.i2c.conset.write(|w| w.acken().bit(true));
             }
-            regs.conset.set(CON_ACKEN_MASK);
+            Ok(())
         }
-        Ok(())
     }
-}
 
-impl blocking::i2c::Write for I2c {
+    impl blocking::i2c::Write for I2c<$I2c> {
 
-    type Error = ();
+        type Error = ();
 
-    fn write(&mut self, addr: u8, bytes: &[u8]) -> Result<(), Self::Error> {
-        self.transmit(&[addr<<1])?;
-        self.transmit(bytes)?;
-        self.stop();
-        Ok(())
+        fn write(&mut self, addr: u8, bytes: &[u8]) -> Result<(), Self::Error> {
+            self.transmit(&[addr<<1])?;
+            self.transmit(bytes)?;
+            self.stop();
+            Ok(())
+        }
     }
-}
 
-impl blocking::i2c::Read for I2c {
+    impl blocking::i2c::Read for I2c<$I2c> {
 
-    type Error = ();
+        type Error = ();
 
-    fn read(&mut self, addr: u8, buffer: &mut [u8]) -> Result<(), Self::Error> {
-        self.transmit(&[addr<<1])?;
-        self.receive(buffer, true)?;
-        self.stop();
-        Ok(())
+        fn read(&mut self, addr: u8, buffer: &mut [u8]) -> Result<(), Self::Error> {
+            self.transmit(&[addr<<1])?;
+            self.receive(buffer, true)?;
+            self.stop();
+            Ok(())
+        }
     }
-}
+}}
+
+i2c_impl!(i2c1, I2C1);
+i2c_impl!(i2c2, I2C2);
