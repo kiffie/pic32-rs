@@ -18,7 +18,6 @@ pub mod time;
 pub mod gpio;
 pub mod uart;
 pub mod i2c;
-pub mod cp0timer;
 pub mod coretimer;
 pub mod clock;
 
