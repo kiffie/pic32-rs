@@ -10,8 +10,6 @@
 
 use crate::pac::INT; // interrupt controller
 
-use core::num::Wrapping;
-
 use crate::time::Hertz;
 use crate::hal::blocking::delay::{DelayMs, DelayUs};
 
@@ -105,7 +103,7 @@ impl DelayUs<u32> for Coretimer {
         }
         let ticks = us * self.ticks_per_us;
         let mut n_wraps = if u32::max_value() - count < ticks  { 1 } else { 0 };
-        let when = (Wrapping(count) + Wrapping(ticks)).0;
+        let when = count.wrapping_add(ticks);
         let mut last = count;
         while n_wraps > 0 || count < when {
             if last > count { // count wrapped
