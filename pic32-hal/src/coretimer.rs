@@ -1,28 +1,26 @@
 //! # Core timer (MIPS cp0 registers) access and Delay implementation
-///
-/// Write access to the count register is intentionally not implemented to avoid
-/// conflicts with the `Delay` functions. The `Delay` functions do not write to the
-/// core timer registers.
-///
-/// The `CountDown` timer implementation, however, modifies the compare register
-/// of the core timer so that an IRQ can be triggered on timer expiration,
-
 
 use crate::pac::INT; // interrupt controller
 
 use crate::time::Hertz;
 use crate::hal::blocking::delay::{DelayMs, DelayUs};
 
+/// Access to the MIPS core timer
+///
+/// Write access to the count register is intentionally not implemented to avoid
+/// conflicts with the `Delay` functions. The `Delay` functions do not write to the
+/// core timer registers.
+///
+/// The `CountDown` timer implementation, however, modifies the compare register
+/// of the core timer so that an IRQ can be triggered on timer expiration.
 pub struct Coretimer {
     ticks_per_us: u32,
-    max_delay_us: u32,
 }
 
 impl Coretimer {
     pub const fn new(sysclock: Hertz) -> Self {
         let ticks_per_us = sysclock.0 / 1_000_000 / 2;
-        let max_delay_us = (1_000_000 * 2 * 0x1_0000_0000 / (sysclock.0 as u64)) as u32;
-        Coretimer{ ticks_per_us, max_delay_us }
+        Coretimer{ ticks_per_us }
     }
 
     /// Read Count register (CP0 register 9, select 0)
@@ -93,45 +91,38 @@ impl DelayMs<u8> for Coretimer {
 }
 
 /// Pauses execution for `us` microseconds
-/// Pause time is limited to the duration
+/// Less efficient implementation that can handle long delays but is not so
+/// well-suited for short delays in the order of a few µs.
 impl DelayUs<u32> for Coretimer {
     fn delay_us(&mut self, us: u32) {
-        // read the count first for most accurate timing
-        let mut count = self.read_count();
-        if us > self.max_delay_us {
-            panic!("delay too long");
-        }
-        let ticks = us * self.ticks_per_us;
-        let mut n_wraps = if u32::max_value() - count < ticks  { 1 } else { 0 };
-        let when = count.wrapping_add(ticks);
-        let mut last = count;
-        while n_wraps > 0 || count < when {
-            if last > count { // count wrapped
-                n_wraps -= 1;
-            }
-            last = count;
-            count = self.read_count();
+        let mut total_ticks = us as u64 * self.ticks_per_us as u64;
+        while total_ticks != 0 {
+            let current_ticks = if total_ticks <= 0xffff_ffffu64 {
+                total_ticks as u32
+            } else {
+                0xffff_ffffu32
+            };
+            let start = self.read_count();
+            total_ticks -= current_ticks as u64;
+            while self.read_count().wrapping_sub(start) < current_ticks { }
         }
     }
 }
 
-// impl DelayUs<i32> for Coretimer {
-//     fn delay_us(&mut self, us: i32) {
-//         if us >= 0 {
-//             self.delay_us(us as u32);
-//         }
-//     }
-// }
-
+/// Pauses execution for `us` microseconds
+/// A more efficient implementation suitable for short delays
 impl DelayUs<u16> for Coretimer {
     fn delay_us(&mut self, us: u16) {
-        self.delay_us(us as u32)
+        // read the count first for most accurate timing
+        let start = self.read_count();
+        let ticks = us as u32 * self.ticks_per_us;
+        while self.read_count().wrapping_sub(start) < ticks { }
     }
 }
 
 impl DelayUs<u8> for Coretimer {
     fn delay_us(&mut self, us: u8) {
-        self.delay_us(us as u32)
+        self.delay_us(us as u16)
     }
 }
 
