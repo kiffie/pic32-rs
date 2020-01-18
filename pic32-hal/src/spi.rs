@@ -1,6 +1,4 @@
-///
-/// SPI driver for PIC32
-///
+//! SPI driver (SPI master)
 
 pub use crate::hal::spi::{Mode, Phase, Polarity};
 use crate::pac::{SPI1, SPI2};

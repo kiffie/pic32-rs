@@ -1,4 +1,4 @@
-/// I2C driver for PIC32
+//! I2C driver for PIC32
 
 use embedded_hal::blocking;
 use crate::pac::{I2C1, I2C2};

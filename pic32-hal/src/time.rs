@@ -1,3 +1,4 @@
+//! Types for time units and frequency
 // Based on https://github.com/stm32-rs/stm32f4xx-hal/blob/master/src/time.rs
 
 /// Bits per second

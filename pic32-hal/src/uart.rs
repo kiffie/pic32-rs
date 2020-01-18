@@ -1,6 +1,5 @@
-///
-/// UART driver for PIC32
-///
+//! UART driver
+
 use core::marker::PhantomData;
 use crate::clock::Osc;
 

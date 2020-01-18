@@ -1,5 +1,4 @@
-//
-// Clock helper and control functions
+//! Clock helper and control functions
 // Work in progress, can calculate pb_clock only, no real control functions
 // implemented
 //
