@@ -17,6 +17,7 @@ use embedded_hal as hal;
 pub mod time;
 pub mod gpio;
 pub mod uart;
+pub mod spi;
 pub mod i2c;
 pub mod coretimer;
 pub mod clock;
