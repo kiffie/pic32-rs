@@ -10,7 +10,6 @@ nb = "0.1.1"
 embedded-hal = { version = "0.2.3", features = ["unproven"] }
 mips_rt = { path = "../mips-rt" }
 
-pic32mx1xxfxxxb = { path ="../../pic32-pac/pic32mx1xxfxxxb", optional = true }
-pic32mx274fxxxb = { path ="../../pic32-pac/pic32mx274fxxxb", optional = true }
+pic32mx1xxfxxxb = { git = "https://github.com/kiffie/pic32-pac.git", optional = true }
+pic32mx274fxxxb = { git = "https://github.com/kiffie/pic32-pac.git", optional = true }
 pic32mx4xxfxxxh = { git = "https://github.com/kiffie/pic32-pac.git", optional = true }
-
