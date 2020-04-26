@@ -11,6 +11,7 @@ use crate::pac::CRU;
 
 #[cfg(any(
     feature = "pic32mx1xxfxxxb",
+    feature = "pic32mx2xxfxxxb",
     feature = "pic32mx4xxfxxxh"
 ))]
 use crate::pac::OSC;
@@ -23,6 +24,7 @@ pub struct Osc {
 
 #[cfg(any(
     feature = "pic32mx1xxfxxxb",
+    feature = "pic32mx2xxfxxxb",
     feature = "pic32mx4xxfxxxh"
 ))]
 pub struct Osc {
@@ -51,6 +53,7 @@ impl Osc {
 
 #[cfg(any(
     feature = "pic32mx1xxfxxxb",
+    feature = "pic32mx2xxfxxxb",
     feature = "pic32mx4xxfxxxh"
 ))]
 impl Osc {
