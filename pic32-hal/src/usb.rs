@@ -18,7 +18,7 @@ use crate::pac::USB;
 
 use usb_device as udev;
 use usb_device::bus::PollResult;
-use usb_device::bus::{UsbBus, UsbBusAllocator};
+use usb_device::bus::UsbBusAllocator;
 use usb_device::endpoint::{EndpointAddress, EndpointType};
 use usb_device::{Result, UsbDirection, UsbError};
 
@@ -194,7 +194,7 @@ impl EndpointControlBlock {
 
         // initialize endpoint control register
         let ep = ep_addr.index();
-        let mut epreg = unsafe { Usb::read_epreg(ep) };
+        let mut epreg = unsafe { UsbBus::read_epreg(ep) };
         if ep_addr.is_in() {
             epreg |= EPREG_EPTXEN_MASK;
         } else {
@@ -205,7 +205,7 @@ impl EndpointControlBlock {
             EndpointType::Isochronous => EPREG_EPCONDIS_MASK,
             EndpointType::Bulk | EndpointType::Interrupt => EPREG_EPCONDIS_MASK | EPREG_EPHSHK_MASK,
         };
-        unsafe { Usb::write_epreg(ep, epreg) };
+        unsafe { UsbBus::write_epreg(ep, epreg) };
         Ok(EndpointControlBlock {
             next_odd: false,
             data01: false,
@@ -361,11 +361,11 @@ struct UsbInner {
 }
 
 /// Usb bus driver to be used with the usb-device crate.
-pub struct Usb(RefCell<UsbInner>);
+pub struct UsbBus(RefCell<UsbInner>);
 
-unsafe impl Sync for Usb {}
+unsafe impl Sync for UsbBus {}
 
-impl Usb {
+impl UsbBus {
     /// Create a new UsbBus. Uses the heap for allocating the various buffers.
     pub fn new(usb: USB) -> UsbBusAllocator<Self> {
         usb.u1con.write(unsafe { |w| w.bits(0) }); // first turn USB off
@@ -385,7 +385,7 @@ impl Usb {
         usb.u1bdtp2.write(unsafe { |w| w.bits(dma_addr >> 16) });
         usb.u1bdtp1.write(unsafe { |w| w.bits(dma_addr >> 8) });
 
-        let bus = Usb(RefCell::new(UsbInner {
+        let bus = UsbBus(RefCell::new(UsbInner {
             bdt,
             usb,
             ecb: Ecb::default(),
@@ -410,7 +410,7 @@ impl Usb {
     }
 }
 
-impl Drop for Usb {
+impl Drop for UsbBus {
     fn drop(&mut self) {
         let usb = &self.0.borrow_mut().usb;
         usb.u1ie.write(unsafe { |w| w.bits(0) });
@@ -418,7 +418,7 @@ impl Drop for Usb {
     }
 }
 
-impl UsbBus for Usb {
+impl usb_device::bus::UsbBus for UsbBus {
     /// Allocate an unidirectional endpoint. To create a control endpoint, which
     /// is always bidirectional, this method needs to be called twice with
     /// different values for ep_dir.
@@ -480,6 +480,14 @@ impl UsbBus for Usb {
 
     fn enable(&mut self) {
         let inner = self.0.borrow();
+
+        // Enable interrupts required to call the poll function from an ISR
+        // To use the interrupts, the interrupt controller must be configured
+        // as well.
+        inner.usb.u1ie.write(|w| w
+            .trnie().bit(true)
+            .stallie().bit(true)
+            .urstie_detachie().bit(true));
         inner.usb.u1con.write(|w| w.usben_sofen().bit(true));
     }
 
