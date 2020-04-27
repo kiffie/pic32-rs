@@ -18,6 +18,7 @@ pub use pic32mx274fxxxb as pac;
 use embedded_hal as hal;
 
 pub mod time;
+pub mod int;
 pub mod gpio;
 pub mod uart;
 pub mod spi;
