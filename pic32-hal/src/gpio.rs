@@ -259,7 +259,10 @@ macro_rules! port {
 }
 
 // configuration for general purpose (non-USB) devices
-#[cfg(feature = "pic32mx1xxfxxxb")]
+#[cfg(any(
+    feature = "pic32mx1xxfxxxb",
+    feature = "pic32mx2xxfxxxb"
+))]
 port!(PORTA, porta, [
     RA0: (ra0, 0, Input<Analog>, true),
     RA1: (ra1, 1, Input<Analog>, true),
@@ -288,6 +291,24 @@ port!(PORTB, portb, [
     RB10: (rb10, 10, Input<Floating>),
     RB11: (rb11, 11, Input<Floating>),
     RB12: (rb12, 12, Input<Analog>, true),
+    RB13: (rb13, 13, Input<Analog>, true),
+    RB14: (rb14, 14, Input<Analog>, true),
+    RB15: (rb15, 15, Input<Analog>, true),
+]);
+
+#[cfg(feature = "pic32mx2xxfxxxb")]
+port!(PORTB, portb, [
+    RB0: (rb0, 0, Input<Analog>, true),
+    RB1: (rb1, 1, Input<Analog>, true),
+    RB2: (rb2, 2, Input<Analog>, true),
+    RB3: (rb3, 3, Input<Analog>, true),
+    RB4: (rb4, 4, Input<Floating>),
+    RB5: (rb5, 5, Input<Floating>),
+    RB7: (rb7, 7, Input<Floating>),
+    RB8: (rb8, 8, Input<Floating>),
+    RB9: (rb9, 9, Input<Floating>),
+    RB10: (rb10, 10, Input<Floating>),
+    RB11: (rb11, 11, Input<Floating>),
     RB13: (rb13, 13, Input<Analog>, true),
     RB14: (rb14, 14, Input<Analog>, true),
     RB15: (rb15, 15, Input<Analog>, true),
