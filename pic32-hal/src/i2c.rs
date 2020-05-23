@@ -129,7 +129,26 @@ macro_rules! i2c_impl {
         type Error = ();
 
         fn read(&mut self, addr: u8, buffer: &mut [u8]) -> Result<(), Self::Error> {
-            self.transmit(&[addr<<1])?;
+            self.transmit(&[(addr << 1 ) | 0x01])?;
+            self.receive(buffer, true)?;
+            self.stop();
+            Ok(())
+        }
+    }
+
+    impl blocking::i2c::WriteRead for I2c<$I2c> {
+
+        type Error = ();
+
+        fn write_read(
+            &mut self, addr: u8,
+            bytes: &[u8],
+            buffer: &mut [u8]
+        ) -> Result<(), Self::Error> {
+            self.transmit(&[addr << 1])?;
+            self.transmit(bytes)?;
+            self.rstart()?;
+            self.transmit(&[(addr << 1) | 0x01])?;
             self.receive(buffer, true)?;
             self.stop();
             Ok(())
