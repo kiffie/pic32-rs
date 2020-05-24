@@ -14,6 +14,9 @@ use core::ptr;
 use core::ptr::{read_volatile, write_volatile};
 use core::slice;
 
+use mips_rt::PhysicalAddress;
+use mips_rt::fmt::virt_to_phys;
+
 use crate::pac::USB;
 
 use usb_device as udev;
@@ -39,44 +42,10 @@ const U1STAT_DIR_POSITION: usize =      3;
 
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
-struct DmaAddress {
-    addr: usize,
-}
-
-impl DmaAddress {
-    const fn null() -> DmaAddress {
-        DmaAddress { addr: 0 }
-    }
-
-    fn as_usize(&self) -> usize {
-        self.addr
-    }
-}
-
-impl<T> From<*mut T> for DmaAddress {
-    fn from(ptr: *mut T) -> Self {
-        let virt = ptr as usize;
-        let addr = if virt & 0x8000_0000 != 0 {
-            virt & 0x1fff_ffff
-        } else {
-            virt + 0x4000_0000
-        };
-        DmaAddress { addr }
-    }
-}
-
-impl<T> From<&mut T> for DmaAddress {
-    fn from(r: &mut T) -> Self {
-        Self::from(r as *mut T)
-    }
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, Default)]
 struct BufferDescriptor {
     flags: u16,
     byte_count: u16,
-    buffer_address: DmaAddress,
+    buffer_address: PhysicalAddress,
 }
 
 // bitmasks for BufferDescriptor flags
@@ -92,7 +61,7 @@ const BD_PID_MSK: u16 =     0x3c;
 //const BD_PID_LEN: usize =   4;
 
 impl BufferDescriptor {
-    const fn new(flags: u16, byte_count: u16, buffer_address: DmaAddress) -> BufferDescriptor {
+    const fn new(flags: u16, byte_count: u16, buffer_address: PhysicalAddress) -> BufferDescriptor {
         BufferDescriptor {
             flags,
             byte_count,
@@ -101,7 +70,7 @@ impl BufferDescriptor {
     }
 
     const fn const_default() -> BufferDescriptor {
-        Self::new(0, 0, DmaAddress::null())
+        Self::new(0, 0, PhysicalAddress::from_usize(0))
     }
 
     fn flags(&self) -> u16 {
@@ -116,7 +85,7 @@ impl BufferDescriptor {
         unsafe { write_volatile(&mut self.byte_count, byte_count) };
     }
 
-    fn set_buffer_address(&mut self, buffer_address: DmaAddress) {
+    fn set_buffer_address(&mut self, buffer_address: PhysicalAddress) {
         //debug!("dma_address = {}", buffer_address.as_usize());
         unsafe { write_volatile(&mut self.buffer_address, buffer_address) };
     }
@@ -188,9 +157,9 @@ impl EndpointControlBlock {
         }
         let bd_pair: &mut [BufferDescriptor; 2] = unsafe { &mut *bd };
         bd_pair[0].set_flags(0);
-        bd_pair[0].set_buffer_address(DmaAddress::from(b0));
+        bd_pair[0].set_buffer_address(virt_to_phys(b0));
         bd_pair[1].set_flags(0);
-        bd_pair[1].set_buffer_address(DmaAddress::from(b1));
+        bd_pair[1].set_buffer_address(virt_to_phys(b1));
 
         // initialize endpoint control register
         let ep = ep_addr.index();
@@ -252,7 +221,7 @@ impl EndpointControlBlock {
             self.stalled = false;
             bd.set_flags(0);
         }
-        bd.set_buffer_address(DmaAddress::from(self.ep_buf[self.next_odd as usize]));
+        bd.set_buffer_address(virt_to_phys(self.ep_buf[self.next_odd as usize]));
         bd.set_byte_count(len as u16);
         bd.set_flags( BD_UOWN | 
                       if self.data01 { BD_DATA01 } else { 0 } |
@@ -380,7 +349,7 @@ impl UsbBus {
 
         // create Buffer Descriptor Table (BDT) and inform the hardware about it
         let mut bdt = Box::pin(BufferDescriptorTable::new());
-        let dma_addr = DmaAddress::from(bdt.as_raw()).as_usize() as u32;
+        let dma_addr = virt_to_phys(bdt.as_raw()).address() as u32;
         usb.u1bdtp3.write(unsafe { |w| w.bits(dma_addr >> 24) });
         usb.u1bdtp2.write(unsafe { |w| w.bits(dma_addr >> 16) });
         usb.u1bdtp1.write(unsafe { |w| w.bits(dma_addr >> 8) });
