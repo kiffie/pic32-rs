@@ -6,6 +6,8 @@
 use crate::time::Hertz;
 use crate::time::U32Ext;
 
+pub mod refclock;
+
 #[cfg(feature = "pic32mx274fxxxb")]
 use crate::pac::CRU;
 
@@ -49,6 +51,10 @@ impl Osc {
         let freq = self.sysclock.0 / (div as u32 + 1);
         freq.hz()
     }
+
+    pub fn refclock(&self) -> refclock::Refclock {
+        refclock::Refclock { osc: &self.osc }
+    }
 }
 
 #[cfg(any(
@@ -71,5 +77,9 @@ impl Osc {
         let div = self.osc.osccon.read().pbdiv().bits();
         let freq = self.sysclock.0 >> div;
         freq.hz()
+    }
+
+    pub fn refclock(&self) -> refclock::Refclock {
+        refclock::Refclock { osc: &self.osc }
     }
 }
