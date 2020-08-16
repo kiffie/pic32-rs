@@ -16,7 +16,7 @@ use core::cell::Cell;
 fn read_count() -> u32 {
     let mut count;
     // does not work with MIPS16
-    unsafe { asm!("mfc0 $0, $$9" : "=r"(count) : : : "volatile") };
+    unsafe { llvm_asm!("mfc0 $0, $$9" : "=r"(count) : : : "volatile") };
     count
 }
 
@@ -131,14 +131,14 @@ impl Timer {
     pub fn read_compare(&self) -> u32 {
         let mut compare;
         // does not work with MIPS16
-        unsafe { asm!("mfc0 $0, $$11" : "=r"(compare) : : : "volatile") };
+        unsafe { llvm_asm!("mfc0 $0, $$11" : "=r"(compare) : : : "volatile") };
         compare
     }
 
     /// Write to Compare register (CPP0 register 11, select 0)
     pub fn write_compare(&self, compare: u32) {
         // does not work with MIPS16
-        unsafe { asm!("mtc0   $0, $$11" : : "r"(compare) : : "volatile") };
+        unsafe { llvm_asm!("mtc0   $0, $$11" : : "r"(compare) : : "volatile") };
     }
 
     /// Enable interrupts

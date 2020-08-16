@@ -1,7 +1,7 @@
 //! HAL library for PIC32
 
 #![no_std]
-#![feature(asm)]
+#![feature(llvm_asm)]
 
 #[cfg(feature = "pic32mx1xxfxxxb")]
 pub use pic32mx1xxfxxxb as pac;
