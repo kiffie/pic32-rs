@@ -1,5 +1,5 @@
-# mcu-rs
-Rust crates for MCU programming and PIC32 HAL 
+# pic32-rs
+Rust crates for PIC32 programming and PIC32 HAL 
 
 * mips-rt: Basic Rust runtime and startup files for MIPS based microcontrollers
 * pic32-hal: HAL grate for PIC32 microcontrollers
