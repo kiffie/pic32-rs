@@ -1,0 +1,21 @@
+[package]
+name = "blinky"
+version = "0.1.0"
+authors = ["Kiffie"]
+license = "MIT"
+edition = "2018"
+
+[features]
+pic32mx1xxfxxxb = ["pic32-hal/pic32mx1xxfxxxb"]
+pic32mx2xxfxxxb = ["pic32-hal/pic32mx2xxfxxxb"]
+default = ["pic32mx1xxfxxxb"]
+
+[dependencies]
+mips_rt = { git = "https://github.com/kiffie/mcu-rs.git" }
+bare-metal = { version = "0.2.4", features = ["const-fn"] }
+embedded-hal = "0.2.3"
+pic32-hal = { git = "https://github.com/kiffie/mcu-rs.git" }
+
+[profile.release]
+opt-level = "s"
+lto = true
