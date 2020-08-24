@@ -67,7 +67,7 @@ like this.
 ```
 
 A `.cargo/config` file is needed to specify the linker script (e.g.
-`32MX150F128B_procdefs.ld`) to refer to the JSON target definition and to build
+`32MX150F128B_procdefs.ld`), to refer to the JSON target definition and to build
 standard library crates.
 
 ```
