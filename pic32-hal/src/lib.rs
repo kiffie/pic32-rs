@@ -29,6 +29,7 @@ pub mod dma;
 
 #[cfg(any(
     feature = "pic32mx2xxfxxxb",
+    feature = "pic32mx274fxxxb",
     feature = "pic32mx4xxfxxxh"
 ))]
 #[cfg(feature = "usb-device")]
