@@ -6,6 +6,11 @@
 use crate::time::Hertz;
 use crate::time::U32Ext;
 
+#[cfg(any(
+    feature = "pic32mx1xxfxxxb",
+    feature = "pic32mx2xxfxxxb",
+    feature = "pic32mx4xxfxxxh"
+))]
 pub mod refclock;
 
 #[cfg(feature = "pic32mx274fxxxb")]
@@ -52,6 +57,11 @@ impl Osc {
         freq.hz()
     }
 
+#[cfg(any(
+    feature = "pic32mx1xxfxxxb",
+    feature = "pic32mx2xxfxxxb",
+    feature = "pic32mx4xxfxxxh"
+))]
     pub fn refclock(&self) -> refclock::Refclock {
         refclock::Refclock { osc: &self.osc }
     }
