@@ -1,0 +1,24 @@
+[package]
+name = "usb_serial"
+version = "0.1.0"
+authors = ["Kiffie"]
+license = "MIT"
+edition = "2018"
+
+[features]
+pic32mx2xxfxxxb = ["pic32-hal/pic32mx2xxfxxxb"]
+pic32mx274fxxxb = ["pic32-hal/pic32mx274fxxxb"]
+default = ["pic32mx2xxfxxxb"]
+
+[dependencies]
+mips_rt = { git = "https://github.com/kiffie/mcu-rs.git" }
+alloc-pic32 = { git = "https://github.com/kiffie/alloc-pic32.git" }
+embedded-hal = "0.2.3"
+pic32-hal = { git = "https://github.com/kiffie/mcu-rs.git", features = ["usb-device"] }
+panic-halt = "0.2.0"
+usb-device = "0.2.5"
+usbd-serial = "0.1.0"
+
+[profile.release]
+opt-level = "s"
+lto = true
