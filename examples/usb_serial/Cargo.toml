@@ -11,10 +11,10 @@ pic32mx274fxxxb = ["pic32-hal/pic32mx274fxxxb"]
 default = ["pic32mx2xxfxxxb"]
 
 [dependencies]
-mips_rt = { git = "https://github.com/kiffie/mcu-rs.git" }
+mips_rt = { git = "https://github.com/kiffie/pic32-rs.git" }
 alloc-pic32 = { git = "https://github.com/kiffie/alloc-pic32.git" }
 embedded-hal = "0.2.3"
-pic32-hal = { git = "https://github.com/kiffie/mcu-rs.git", features = ["usb-device"] }
+pic32-hal = { git = "https://github.com/kiffie/pic32-rs.git", features = ["usb-device"] }
 panic-halt = "0.2.0"
 usb-device = "0.2.5"
 usbd-serial = "0.1.0"
