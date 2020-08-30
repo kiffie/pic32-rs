@@ -314,15 +314,28 @@ port!(PORTB, portb, [
     RB15: (rb15, 15, Input<Analog>, true),
 ]);
 
-// port!(PORTC, portc, [
-//     RC0: (rc0, 0, Input<Analog>, true),
-//     RC1: (rc1, 1, Input<Analog>, true),
-//     RC2: (rc2, 2, Input<Analog>, true),
-//     RC3: (rc3, 3, Input<Analog>, true),
-//     RC4: (rc4, 4, Input<Floating>),
-//     RC5: (rc5, 5, Input<Floating>),
-//     RC6: (rc6, 6, Input<Floating>),
-//     RC7: (rc7, 7, Input<Floating>),
-//     RC8: (rc8, 8, Input<Floating>),
-//     RC9: (rc9, 9, Input<Floating>),
-// ]);
+// PIC32MX2xx 28pin XLP USB devices
+#[cfg(feature = "pic32mx274fxxxb")]
+port!(PORTA, porta, [
+    RA0: (ra0, 0, Input<Analog>, true),
+    RA1: (ra1, 1, Input<Analog>, true),
+    RA2: (ra2, 2, Input<Floating>),
+    RA3: (ra3, 3, Input<Floating>),
+    RA4: (ra4, 4, Input<Floating>),
+]);
+
+#[cfg(feature = "pic32mx274fxxxb")]
+port!(PORTB, portb, [
+    RB0: (rb0, 0, Input<Analog>, true),
+    RB1: (rb1, 1, Input<Analog>, true),
+    RB2: (rb2, 2, Input<Analog>, true),
+    RB3: (rb3, 3, Input<Analog>, true),
+    RB4: (rb4, 4, Input<Floating>),
+    RB5: (rb5, 5, Input<Floating>),
+    RB7: (rb7, 7, Input<Floating>),
+    RB8: (rb8, 8, Input<Floating>),
+    RB9: (rb9, 9, Input<Floating>),
+    RB13: (rb13, 13, Input<Analog>, true),
+    RB14: (rb14, 14, Input<Analog>, true),
+    RB15: (rb15, 15, Input<Analog>, true),
+]);
