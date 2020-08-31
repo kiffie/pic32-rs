@@ -1,0 +1,24 @@
+[package]
+name = "i2c_oled_display"
+version = "0.2.0"
+authors = ["Kiffie"]
+license = "MIT"
+edition = "2018"
+
+[features]
+pic32mx1xxfxxxb = ["pic32-hal/pic32mx1xxfxxxb"]
+pic32mx274fxxxb = ["pic32-hal/pic32mx274fxxxb"]
+default = ["pic32mx1xxfxxxb"]
+#default = ["pic32mx274fxxxb"]
+
+[dependencies]
+mips_rt = { git = "https://github.com/kiffie/pic32-rs.git" }
+embedded-hal = "0.2.3"
+tinylog = { git = "https://github.com/kiffie/pic32-rs.git" }
+pic32-hal = { git = "https://github.com/kiffie/pic32-rs.git" }
+ssd1306 = "0.2.6"
+embedded-graphics = "0.4.9"
+
+[profile.release]
+opt-level = "s"
+lto = true
