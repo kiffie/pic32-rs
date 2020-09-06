@@ -37,13 +37,13 @@ macro_rules! i2c_impl {
             unsafe {
                 i2c.brg.write(|w| w.brg().bits(brg as u16));
                 // disable slew rate control, see PIC32MX1xx/2xxx Silicon Errata, item 17
-                i2c.con.write(|w| w.on().bit(true).disslw().bit(true));
+                i2c.cont.write(|w| w.on().bit(true).disslw().bit(true));
             }
             I2c { i2c, transaction_ongoing: false }
         }
 
         fn i2c_busy(&self) -> bool {
-            (self.i2c.con.read().bits() & 0x1f) != 0
+            (self.i2c.cont.read().bits() & 0x1f) != 0
         }
 
         /// Transmit data over the bus. Generate a START condition if called
@@ -52,7 +52,7 @@ macro_rules! i2c_impl {
             if !self.transaction_ongoing {
                 while self.i2c_busy(){};
                 // generate start condition
-                self.i2c.conset.write(|w| w.sen().bit(true));
+                self.i2c.contset.write(|w| w.sen().bit(true));
                 self.transaction_ongoing = true;
             }
             for byte in data {
@@ -74,7 +74,7 @@ macro_rules! i2c_impl {
         pub fn rstart(&self) -> Result<(),()> {
             if self.transaction_ongoing {
                 while self.i2c_busy(){};
-                self.i2c.conset.write(|w| w.rsen().bit(true));
+                self.i2c.contset.write(|w| w.rsen().bit(true));
                 Ok(())
             }else{
                 Err(())
@@ -84,7 +84,7 @@ macro_rules! i2c_impl {
         /// Generate a stop condition and terminate the I2C transfer
         pub fn stop(&mut self) {
             while self.i2c_busy() {}
-            self.i2c.conset.write(|w| w.pen().bit(true));
+            self.i2c.contset.write(|w| w.pen().bit(true));
             self.transaction_ongoing = false;
         }
 
@@ -98,15 +98,15 @@ macro_rules! i2c_impl {
             let len = data.len();
             for (i, byte) in data.iter_mut().enumerate() {
                 while self.i2c_busy(){};
-                self.i2c.conset.write(|w| w.rcen().bit(true));
+                self.i2c.contset.write(|w| w.rcen().bit(true));
                 while self.i2c_busy() { }
                 *byte = self.i2c.rcv.read().rcv().bits();
                 if (i == len - 1) && nack_last { // NACK for last byte
-                    self.i2c.conset.write(|w| w.ackdt().bit(true));
+                    self.i2c.contset.write(|w| w.ackdt().bit(true));
                 }else{
-                    self.i2c.conclr.write(|w| w.ackdt().bit(true));
+                    self.i2c.contclr.write(|w| w.ackdt().bit(true));
                 }
-                self.i2c.conset.write(|w| w.acken().bit(true));
+                self.i2c.contset.write(|w| w.acken().bit(true));
             }
             Ok(())
         }

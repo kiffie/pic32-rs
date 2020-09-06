@@ -118,10 +118,10 @@ macro_rules! dma {
                 self.ch.dsiz.write(|w| w.bits(destination_size as u32));
                 self.ch.csiz.write(|w| w.bits(cell_size as u32));
                 match mode {
-                    XferMode::OneShot => self.ch.conclr.write(|w| w.chaen().bit(true)),
-                    XferMode::Auto => self.ch.conset.write(|w| w.chaen().bit(true)),
+                    XferMode::OneShot => self.ch.contclr.write(|w| w.chaen().bit(true)),
+                    XferMode::Auto => self.ch.contset.write(|w| w.chaen().bit(true)),
                 }
-                self.ch.conset.write(|w| w.chen().bit(true));
+                self.ch.contset.write(|w| w.chen().bit(true));
             }
         }
     };

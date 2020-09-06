@@ -68,7 +68,7 @@ macro_rules! spi {
                 proto: Proto,
                 clock_div: u32,
             ) -> Self {
-                spi.con.write(|w| unsafe { w.bits(0) }); // first turn SPI off
+                spi.con1.write(|w| unsafe { w.bits(0) }); // first turn SPI off
                 let brg1 = clock_div / 2;
                 let brg = if brg1 > 0 { brg1 -1 } else { brg1 };
                 spi.brg.write(|w| unsafe { w.bits(brg) });
@@ -83,7 +83,7 @@ macro_rules! spi {
                             Phase::CaptureOnSecondTransition => false,
                         };
                         spi.con2.write(|w| unsafe { w.bits(0) });
-                        spi.con.write(|w| { w
+                        spi.con1.write(|w| { w
                             .enhbuf().bit(true)
                             .cke().bit(cke)
                             .ckp().bit(ckp)
@@ -98,7 +98,7 @@ macro_rules! spi {
                             .auden().bit(true)
                             .audmod().bits(0b00) // I2S mode
                         });
-                        spi.con.write(|w| unsafe { w
+                        spi.con1.write(|w| unsafe { w
                             .mclksel().bit(true) // use reference clock
                             .enhbuf().bit(true)
                             .mode32().bit(frame_format.mode32())
@@ -114,7 +114,7 @@ macro_rules! spi {
             }
 
             pub fn free(self) -> $Spi {
-                self.spi.con.write(|w| w.on().bit(false)); // turn SPI off
+                self.spi.con1.write(|w| w.on().bit(false)); // turn SPI off
                 self.spi
             }
         }
