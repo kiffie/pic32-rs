@@ -24,10 +24,13 @@ To set up the toolchain, the following commands may be used.
 ```
 rustup default nightly
 rustup target install mipsel-unknown-linux-gnu
+rustup component add rust-src
 cargo install cargo-binutils
+rustup component add llvm-tools-preview
 ```
 
-`cargo-binutils` includes `cargo-objcopy` that can be used to generate Intel HEX
+[cargo-binutils](https://github.com/rust-embedded/cargo-binutils) includes
+`cargo-objcopy` that can be used to generate Intel HEX
 files. When other tools are used to generate HEX files or if the programmer can
 deal with ELF files then cargo-binutils is not needed.
 
