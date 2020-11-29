@@ -1,10 +1,9 @@
 
-[target.mipsel-none]
-rustflags = ["-C", "link-arg=-T32MX150F128B_procdefs.ld",
-             "-C", "relocation-model=static"]
+[target.mipsel-unknown-none]
+rustflags = ["-C", "link-arg=-T32MX150F128B_procdefs.ld"]
 
 [build]
-target = "mipsel-none.json"
+target = "mipsel-unknown-none"
 
 [unstable]
 build-std = ["core", "compiler_builtins", "alloc"]
