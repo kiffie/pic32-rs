@@ -15,7 +15,7 @@ pub enum Fscl {
 }
 
 /// An I2C driver for the PIC32. Contains primitives `transmit()`, `receive()`, 
-/// `rstart()`, `stop()` that can be called one after another to build complex
+/// `rstart()`, `stop()` that can be called one after another to build a complex
 /// I2C transaction. A Transaction must be started with `transmit()` and
 /// concluded with `stop()`
 pub struct I2c<I2C> {
@@ -47,7 +47,7 @@ macro_rules! i2c_impl {
         }
 
         /// Transmit data over the bus. Generate a START condition if called
-        /// fist during a transaction.
+        /// first during a transaction.
         pub fn transmit(&mut self, data: &[u8]) -> Result<(),()> {
             if !self.transaction_ongoing {
                 while self.i2c_busy(){};
