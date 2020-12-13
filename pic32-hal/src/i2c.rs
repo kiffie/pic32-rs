@@ -23,6 +23,14 @@ pub struct I2c<I2C> {
     transaction_ongoing: bool,
 }
 
+/// Primitive I2C Operations
+pub trait Ops {
+    fn transmit(&mut self, data: &[u8]) -> Result<(), ()>;
+    fn rstart(&self) -> Result<(), ()>;
+    fn stop(&mut self);
+    fn receive(&mut self, data: &mut [u8], nack_last: bool) -> Result<(), ()>;
+}
+
 macro_rules! i2c_impl {
     ($Id:ident, $I2c:ident) => {
         impl I2c<$I2c> {
@@ -42,13 +50,21 @@ macro_rules! i2c_impl {
                 }
             }
 
+            /// Destroy I2C object and return i2c HAL object
+            pub fn free(self) -> $I2c {
+                self.i2c
+            }
+
+            /// Returns true if busy
             fn i2c_busy(&self) -> bool {
                 (self.i2c.cont.read().bits() & 0x1f) != 0
             }
+        }
 
+        impl Ops for I2c<$I2c> {
             /// Transmit data over the bus. Generate a START condition if called
             /// first during a transaction.
-            pub fn transmit(&mut self, data: &[u8]) -> Result<(), ()> {
+            fn transmit(&mut self, data: &[u8]) -> Result<(), ()> {
                 if !self.transaction_ongoing {
                     while self.i2c_busy() {}
                     // generate start condition
@@ -71,7 +87,7 @@ macro_rules! i2c_impl {
 
             /// Generate a repeated start condition
             /// A transaction must be started before calling this functions
-            pub fn rstart(&self) -> Result<(), ()> {
+            fn rstart(&self) -> Result<(), ()> {
                 if self.transaction_ongoing {
                     while self.i2c_busy() {}
                     self.i2c.contset.write(|w| w.rsen().bit(true));
@@ -82,7 +98,7 @@ macro_rules! i2c_impl {
             }
 
             /// Generate a stop condition and terminate the I2C transfer
-            pub fn stop(&mut self) {
+            fn stop(&mut self) {
                 while self.i2c_busy() {}
                 self.i2c.contset.write(|w| w.pen().bit(true));
                 self.transaction_ongoing = false;
@@ -91,7 +107,7 @@ macro_rules! i2c_impl {
             /// Receive data.len() bytes. nack_last determines whether a NACK shall
             /// be created after the reception of the last byte
             /// A transaction must be started before calling this function
-            pub fn receive(&mut self, data: &mut [u8], nack_last: bool) -> Result<(), ()> {
+            fn receive(&mut self, data: &mut [u8], nack_last: bool) -> Result<(), ()> {
                 if !self.transaction_ongoing {
                     return Err(());
                 }
