@@ -47,6 +47,8 @@ pub trait Ops {
 
     /// Enable DMA channel
     ///
+    /// # Safety
+    ///
     /// Unsafe because the DMA controller will access the memory blocks
     /// specified as source and destination without any checks
     unsafe fn enable(&self, mode: XferMode);
@@ -58,6 +60,9 @@ pub trait Ops {
 
     /// Disable a DMA channel
     fn disable(&self);
+
+    /// Force a cell transfer
+    fn force(&self);
 }
 
 pub struct DmaChannel<D> {
@@ -146,6 +151,10 @@ macro_rules! dma {
             fn disable(&self) {
                 self.ch.contclr.write(|w| w.chen().bit(true));
                 while self.ch.cont.read().chbusy().bit() {}
+            }
+
+            fn force(&self) {
+                self.ch.econset.write(|w| w.cforce().bit(true));
             }
         }
 
