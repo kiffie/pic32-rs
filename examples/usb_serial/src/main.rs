@@ -109,6 +109,6 @@ fn main() -> ! {
 }
 
 #[alloc_error_handler]
-fn foo(_layout: core::alloc::Layout) -> ! {
-    loop {}
+fn alloc_error(layout: core::alloc::Layout) -> ! {
+    panic!("Cannot allocate heap memory: {:?}", layout);
 }
