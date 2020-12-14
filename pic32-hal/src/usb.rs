@@ -10,7 +10,6 @@ use alloc::alloc::{alloc, dealloc, Layout};
 use alloc::boxed::Box;
 use core::cell::RefCell;
 use core::pin::Pin;
-use core::ptr;
 use core::ptr::{read_volatile, write_volatile};
 use core::slice;
 
@@ -143,7 +142,7 @@ impl EndpointControlBlock {
                     .map_err(|_| UsbError::EndpointOverflow)?,
             )
         };
-        if b0 == ptr::null_mut() {
+        if b0.is_null() {
             return Err(UsbError::EndpointOverflow);
         }
         let b1 = unsafe {
@@ -152,7 +151,7 @@ impl EndpointControlBlock {
                     .map_err(|_| UsbError::EndpointOverflow)?,
             )
         };
-        if b1 == ptr::null_mut() {
+        if b1.is_null() {
             return Err(UsbError::EndpointOverflow);
         }
         let bd_pair: &mut [BufferDescriptor; 2] = unsafe { &mut *bd };
@@ -192,7 +191,7 @@ impl EndpointControlBlock {
     /// Test if an endpoint can be armed.
     /// Returns the endpoint buffer as a mutable slice if it can be armed.
     /// Otherwise, None is returned.
-    fn can_arm<'a>(&'a mut self) -> Option<&'a mut [u8]> {
+    fn can_arm(&mut self) -> Option<&mut [u8]> {
         let bd: &mut BufferDescriptor = unsafe { &mut (*self.bd)[self.next_odd as usize] };
         if bd.flags() & BD_UOWN == 0 {
             unsafe {
@@ -250,17 +249,9 @@ impl EndpointControlBlock {
     /// e.g. when processing a SETUP transaction.
     fn cancel(&mut self) {
         self.next_complete_odd =
-            if (self.next_complete_odd as usize ^ self.complete_ctr as usize) & 0x01 != 0 {
-                true
-            } else {
-                false
-            };
+            (self.next_complete_odd as usize ^ self.complete_ctr as usize) & 0x01 != 0;
         self.complete_ctr = 0;
-        self.next_odd = if (self.next_odd as usize ^ self.armed_ctr as usize) & 0x01 != 0 {
-            true
-        } else {
-            false
-        };
+        self.next_odd = (self.next_odd as usize ^ self.armed_ctr as usize) & 0x01 != 0;
         self.armed_ctr = 0;
         unsafe {
             (*self.bd)[0].set_flags(0);
@@ -270,11 +261,7 @@ impl EndpointControlBlock {
 
     fn clear_completed(&mut self) {
         self.next_complete_odd =
-            if (self.next_complete_odd as usize ^ self.complete_ctr as usize) & 0x01 != 0 {
-                true
-            } else {
-                false
-            };
+            (self.next_complete_odd as usize ^ self.complete_ctr as usize) & 0x01 != 0;
         self.complete_ctr = 0;
     }
 
