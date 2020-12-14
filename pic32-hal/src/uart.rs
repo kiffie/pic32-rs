@@ -3,8 +3,6 @@
 use core::marker::PhantomData;
 use crate::clock::Osc;
 
-use nb;
-
 use crate::pac::{UART1, UART2};
 
 /// Uart

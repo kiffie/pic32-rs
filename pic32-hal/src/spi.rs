@@ -3,8 +3,6 @@
 pub use crate::hal::spi::{Mode, Phase, Polarity};
 use crate::pac::{SPI1, SPI2};
 
-use nb;
-
 /// SPI error
 #[derive(Debug)]
 pub enum Error {
