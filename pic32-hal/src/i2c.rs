@@ -2,7 +2,11 @@
 
 use crate::pac::{I2C1, I2C2};
 use crate::time::Hertz;
+use crate::dma;
+use crate::int::InterruptSource;
 use embedded_hal::blocking;
+use mips_rt::PhysicalAddress;
+use mips_rt::fmt::virt_to_phys;
 
 /// I2C clock frequency specifier
 /// The values of this enum correspond to the divisor values mentioned in the
@@ -12,6 +16,13 @@ pub enum Fscl {
     F100KHZ = 204248,
     F400KHZ = 872600,
     F1000KHZ = 2525253,
+}
+
+/// I2C Error type
+#[derive(Debug, Clone)]
+pub enum Error {
+    TransactionFailed,
+    InvalidState,
 }
 
 /// An I2C driver for the PIC32. Contains primitives `transmit()`, `receive()`,
@@ -25,10 +36,19 @@ pub struct I2c<I2C> {
 
 /// Primitive I2C Operations
 pub trait Ops {
-    fn transmit(&mut self, data: &[u8]) -> Result<(), ()>;
-    fn rstart(&self) -> Result<(), ()>;
+    fn transmit(&mut self, data: &[u8]) -> Result<(), Error>;
+
+    /// Initiate DMA transmission
+    ///
+    /// # Safety
+    ///
+    /// Caller must make sure that the physical address block specified by
+    /// `addr` and `len` refers to a valid memory block during the whole
+    /// DMA transfer.
+    unsafe fn transmit_dma<D: dma::Ops>(&mut self, dma: &D, addr: PhysicalAddress, len: usize) -> Result<(), Error>;
+    fn rstart(&self) -> Result<(), Error>;
     fn stop(&mut self);
-    fn receive(&mut self, data: &mut [u8], nack_last: bool) -> Result<(), ()>;
+    fn receive(&mut self, data: &mut [u8], nack_last: bool) -> Result<(), Error>;
 }
 
 macro_rules! i2c_impl {
@@ -64,7 +84,7 @@ macro_rules! i2c_impl {
         impl Ops for I2c<$I2c> {
             /// Transmit data over the bus. Generate a START condition if called
             /// first during a transaction.
-            fn transmit(&mut self, data: &[u8]) -> Result<(), ()> {
+            fn transmit(&mut self, data: &[u8]) -> Result<(), Error> {
                 if !self.transaction_ongoing {
                     while self.i2c_busy() {}
                     // generate start condition
@@ -79,21 +99,38 @@ macro_rules! i2c_impl {
                     // check for NACK
                     if self.i2c.stat.read().ackstat().bit() {
                         self.stop();
-                        return Err(());
+                        return Err(Error::TransactionFailed);
                     }
                 }
                 Ok(())
             }
 
+            unsafe fn transmit_dma<D: dma::Ops>(&mut self, dma: &D, addr: PhysicalAddress, len: usize) -> Result<(), Error> {
+                if !self.transaction_ongoing {
+                    while self.i2c_busy() {}
+                    // generate start condition
+                    self.i2c.contset.write(|w| w.sen().bit(true));
+                    self.transaction_ongoing = true;
+                }
+                dma.set_source(addr, len);
+                let trn = &self.i2c.trn as *const _ as *mut u32;
+                dma.set_dest(virt_to_phys(trn), 1);
+                dma.set_cell_size(1);
+                dma.set_start_event(Some(InterruptSource::I2C1_MASTER));
+                dma.enable(dma::XferMode::OneShot);
+                dma.force();
+                Ok(())
+            }
+
             /// Generate a repeated start condition
             /// A transaction must be started before calling this functions
-            fn rstart(&self) -> Result<(), ()> {
+            fn rstart(&self) -> Result<(), Error> {
                 if self.transaction_ongoing {
                     while self.i2c_busy() {}
                     self.i2c.contset.write(|w| w.rsen().bit(true));
                     Ok(())
                 } else {
-                    Err(())
+                    Err(Error::InvalidState)
                 }
             }
 
@@ -107,9 +144,9 @@ macro_rules! i2c_impl {
             /// Receive data.len() bytes. nack_last determines whether a NACK shall
             /// be created after the reception of the last byte
             /// A transaction must be started before calling this function
-            fn receive(&mut self, data: &mut [u8], nack_last: bool) -> Result<(), ()> {
+            fn receive(&mut self, data: &mut [u8], nack_last: bool) -> Result<(), Error> {
                 if !self.transaction_ongoing {
-                    return Err(());
+                    return Err(Error::InvalidState);
                 }
                 let len = data.len();
                 for (i, byte) in data.iter_mut().enumerate() {
@@ -130,7 +167,7 @@ macro_rules! i2c_impl {
         }
 
         impl blocking::i2c::Write for I2c<$I2c> {
-            type Error = ();
+            type Error = Error;
 
             fn write(&mut self, addr: u8, bytes: &[u8]) -> Result<(), Self::Error> {
                 self.transmit(&[addr << 1])?;
@@ -141,7 +178,7 @@ macro_rules! i2c_impl {
         }
 
         impl blocking::i2c::Read for I2c<$I2c> {
-            type Error = ();
+            type Error = Error;
 
             fn read(&mut self, addr: u8, buffer: &mut [u8]) -> Result<(), Self::Error> {
                 self.transmit(&[(addr << 1) | 0x01])?;
@@ -152,7 +189,7 @@ macro_rules! i2c_impl {
         }
 
         impl blocking::i2c::WriteRead for I2c<$I2c> {
-            type Error = ();
+            type Error = Error;
 
             fn write_read(
                 &mut self,
