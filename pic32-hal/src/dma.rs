@@ -27,22 +27,39 @@ pub enum DmaIrq {
     CHER = 0x01,
 }
 
+/// indicates whether the channel shall be automatically enabled after a block
+/// transfer
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum XferMode {
+    OneShot,
+    Auto,
+}
+
 /// DMA Operations
 ///
 /// This trait defines operations that can be carried out by a DMAChannel
 pub trait Ops {
+    /// Set source address and size of source block in bytes
     fn set_source(&self, addr: PhysicalAddress, size: usize);
 
+    /// Set destination address and size of destination block in bytes
     fn set_dest(&self, addr: PhysicalAddress, size: usize);
 
+    /// Set cell size, i.e. number of bytes transferred per triggering event
     fn set_cell_size(&self, size: usize);
 
+    /// Set start event source for triggering a cell transfer
     fn set_start_event(&self, event: Option<InterruptSource>);
 
+    /// Set event for aborting a transfer
     fn set_abort_event(&self, event: Option<InterruptSource>);
 
+    // Set data pattern that aborts a transfer
     fn set_abort_pattern(&self, pattern: Option<u8>);
 
+    /// Enable/disable individual interrupt sources
+    ///
+    /// This function does not configure the interrupt controller.
     fn irq_enable(&self, irq: BitFlags<DmaIrq>);
 
     /// Enable DMA channel
@@ -174,11 +191,3 @@ dma!(channel0, DMAC0);
 dma!(channel1, DMAC1);
 dma!(channel2, DMAC2);
 dma!(channel3, DMAC3);
-
-/// indicates whether the channel shall be automatically enabled after a block
-/// transfer
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum XferMode {
-    OneShot,
-    Auto,
-}
