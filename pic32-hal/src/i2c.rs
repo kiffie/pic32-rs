@@ -5,8 +5,8 @@ use crate::time::Hertz;
 use crate::dma;
 use crate::int::InterruptSource;
 use embedded_hal::blocking;
-use mips_rt::PhysicalAddress;
-use mips_rt::fmt::virt_to_phys;
+use mips_mcu::PhysicalAddress;
+use mips_mcu::fmt::virt_to_phys;
 
 /// I2C clock frequency specifier
 /// The values of this enum correspond to the divisor values mentioned in the

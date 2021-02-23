@@ -39,9 +39,6 @@ pub unsafe extern "C" fn rust_reset() -> ! {
 #[no_mangle]
 pub unsafe extern "C" fn DefaultPreInit() {}
 
-pub mod interrupt;
-pub mod fmt;
-
 /// Returns a pointer to the start of the heap
 ///
 /// The returned pointer is guaranteed to be 4-byte aligned.
@@ -52,24 +49,4 @@ pub fn heap_start() -> *mut u32 {
     }
 
     unsafe { &mut __sheap }
-}
-
-/// Physical address
-#[derive(Clone, Copy, Debug, Default)]
-pub struct PhysicalAddress {
-    addr: usize,
-}
-
-impl PhysicalAddress {
-
-    /// Create a PhysicalAddress by specifying its value directly
-    pub const fn from_usize(addr: usize) -> Self {
-        Self { addr }
-    }
-
-    /// get the value of the DmaAddress. Useful for programming of bus master
-    /// peripherals, which typically access physical memory
-    pub fn address(&self) -> usize {
-        self.addr
-    }
 }

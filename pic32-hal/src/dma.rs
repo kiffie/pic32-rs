@@ -3,7 +3,7 @@
 use crate::int::InterruptSource;
 use crate::pac::{DMAC, DMAC0, DMAC1, DMAC2, DMAC3};
 use enumflags2::BitFlags;
-use mips_rt::PhysicalAddress;
+use mips_mcu::PhysicalAddress;
 
 /// Interrupt flag or enable bits related to a specific DMA channel
 #[derive(BitFlags, Copy, Clone, Debug, PartialEq)]

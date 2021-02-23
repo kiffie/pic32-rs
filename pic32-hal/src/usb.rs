@@ -13,8 +13,8 @@ use core::pin::Pin;
 use core::ptr::{read_volatile, write_volatile};
 use core::slice;
 
-use mips_rt::PhysicalAddress;
-use mips_rt::fmt::virt_to_phys;
+use mips_mcu::PhysicalAddress;
+use mips_mcu::fmt::virt_to_phys;
 
 use crate::pac::USB;
 

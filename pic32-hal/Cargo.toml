@@ -10,6 +10,7 @@ default = ["pic32mx2xxfxxxb"]
 [dependencies]
 nb = "0.1.1"
 embedded-hal = { version = "0.2.3", features = ["unproven"] }
+mips-mcu = "0.1.0"
 mips_rt = { git = "https://github.com/kiffie/pic32-rs.git" }
 usb-device = { version = "0.2.5", optional = true }
 enumflags2 = "0.6.4"
