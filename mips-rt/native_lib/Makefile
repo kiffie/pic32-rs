@@ -13,7 +13,7 @@ LIB = libnative
 
 CFLAGS = -Wall -mips32r2 -msoft-float -Os -Iinclude
 
-OBJECTS = crt0.o isr_context.o exception_table.o mips_irq.o general-exception.o
+OBJECTS = crt0.o isr_context.o exception_table.o general-exception.o
 
 DEPS    = $(patsubst %.o, %.d, $(notdir $(OBJECTS)))
 
@@ -33,7 +33,7 @@ $(LIB).a: $(OBJECTS)
 clean:
 	rm -f $(OBJECTS) $(DEPS)
 
-mrpropoer: clean
+mrproper: clean
 	rm -f $(LIB).a
 
 -include $(DEPS)
