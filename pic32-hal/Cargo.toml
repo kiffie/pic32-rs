@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Kiffie van Haash"]
 edition = "2018"
 
+[features]
+default = ["pic32mx2xxfxxxb"]
+
 [dependencies]
 nb = "0.1.1"
 embedded-hal = { version = "0.2.3", features = ["unproven"] }
@@ -11,7 +14,23 @@ mips_rt = { git = "https://github.com/kiffie/pic32-rs.git" }
 usb-device = { version = "0.2.5", optional = true }
 enumflags2 = "0.6.4"
 
-pic32mx1xxfxxxb = { git = "https://github.com/kiffie/pic32-pac.git", optional = true }
-pic32mx2xxfxxxb = { git = "https://github.com/kiffie/pic32-pac.git", optional = true }
-pic32mx274fxxxb = { git = "https://github.com/kiffie/pic32-pac.git", optional = true }
-pic32mx4xxfxxxh = { git = "https://github.com/kiffie/pic32-pac.git", optional = true }
+[dependencies.pic32mx1xxfxxxb]
+git = "https://github.com/kiffie/pic32-pac.git"
+optional = true
+features = ["rt"]
+
+[dependencies.pic32mx2xxfxxxb]
+git = "https://github.com/kiffie/pic32-pac.git"
+optional = true
+features = ["rt"]
+
+[dependencies.pic32mx274fxxxb]
+git = "https://github.com/kiffie/pic32-pac.git"
+optional = true
+features = ["rt"]
+
+[dependencies.pic32mx4xxfxxxh]
+git = "https://github.com/kiffie/pic32-pac.git"
+optional = true
+#features = ["rt"]
+
