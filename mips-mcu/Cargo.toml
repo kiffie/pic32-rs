@@ -5,6 +5,7 @@ categories = ["embedded", "hardware-support", "no-std"]
 keywords = ["mips", "register", "peripheral"]
 version = "0.1.0"
 authors = ["Stephan <kiffie@mailbox.org>"]
+repository = "https://github.com/kiffie/pic32-rs"
 license = "MIT OR Apache-2.0"
 edition = "2018"
 
