@@ -1,6 +1,6 @@
 [package]
 name = "pic32-hal"
-version = "0.1.0"
+version = "0.3.0"
 authors = ["Kiffie van Haash"]
 edition = "2018"
 
