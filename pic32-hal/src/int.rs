@@ -2,7 +2,7 @@
 //!
 //! Enable/disable and set priorities of interrupts in Multi-vectored mode
 
-use crate::pac::{generic::Reg, INT};
+use crate::pac::{generic::{RegisterSpec, Reg}, INT};
 use core::convert::TryFrom;
 use core::marker::PhantomData;
 use core::ptr::{read_volatile, write_volatile};
@@ -106,7 +106,7 @@ impl Int {
         Int { _int: PhantomData }
     }
 
-    fn bitaddr<T>(s: InterruptSource, breg: &Reg<u32, T>) -> (*mut u32, u32) {
+    fn bitaddr<REG: RegisterSpec>(s: InterruptSource, breg: &Reg<REG>) -> (*mut u32, u32) {
         let regndx = (s as usize) / 32;
         let mask = 1 << ((s as usize) % 32);
         let base = breg as *const _ as usize;
@@ -151,7 +151,7 @@ impl Int {
         unsafe { write_volatile(reg, mask) };
     }
 
-    fn byteaddr<T>(iv: Interrupt, breg: &Reg<u32, T>) -> (*mut u32, usize) {
+    fn byteaddr<REG: RegisterSpec>(iv: Interrupt, breg: &Reg<REG>) -> (*mut u32, usize) {
         let regndx = (iv as usize) / 4;
         let bytepos = ((iv as usize) % 4) * 8;
         let base = breg as *const _ as usize;
