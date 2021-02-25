@@ -8,6 +8,8 @@
 #![no_main]
 #![no_std]
 
+#[allow(unused_imports)]
+use mips_rt;
 use core::panic::PanicInfo;
 use embedded_hal::digital::v2::*;
 use embedded_hal::blocking::delay::DelayMs;
@@ -32,7 +34,7 @@ pub static CONFIGSFRS: [u32; 4] = [
 
 #[no_mangle]
 pub fn main() -> ! {
-    let p = unsafe { pac::Peripherals::steal() };
+    let p = pac::Peripherals::take().unwrap();
     // setup clock control object
     let sysclock = 40_000_000_u32.hz();
     let mut timer = Delay::new(sysclock);

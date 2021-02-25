@@ -12,10 +12,9 @@ default = ["pic32mx1xxfxxxb"]
 
 [dependencies]
 mips_rt = { git = "https://github.com/kiffie/pic32-rs.git" }
-bare-metal = { version = "0.2.4", features = ["const-fn"] }
 embedded-hal = "0.2.3"
 pic32-hal = { git = "https://github.com/kiffie/pic32-rs.git" }
 
 [profile.release]
-opt-level = "s"
+opt-level = 2
 lto = true
