@@ -1,7 +1,7 @@
 [package]
 name = "i2c_oled_display"
-version = "0.2.0"
-authors = ["Kiffie"]
+version = "0.3.0"
+authors = ["Stephan <kiffie@mailbox.org>"]
 license = "MIT"
 edition = "2018"
 
@@ -20,5 +20,5 @@ ssd1306 = "0.2.6"
 embedded-graphics = "0.4.9"
 
 [profile.release]
-opt-level = "s"
+opt-level = 2
 lto = true

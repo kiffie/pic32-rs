@@ -4,14 +4,12 @@
 #![no_std]
 #![feature(panic_info_message)]
 
-use core::cell::RefCell;
 use core::panic::PanicInfo;
 
+#[allow(unused_imports)]
 use mips_rt;
 use tinylog;
 use tinylog::{debug, error, info};
-
-use mips_rt::interrupt;
 
 use embedded_hal::blocking::delay::DelayMs;
 use embedded_hal::digital::v2::{OutputPin, ToggleableOutputPin};
@@ -58,14 +56,13 @@ pub static CONFIGSFRS: [u32; 4] = [
     0xfffffff3, // DEVCFG0
 ];
 
-static mut LOG_TX: Option<RefCell<Tx<UART1>>> = None;
+static mut LOG_TX: Option<Tx<UART1>> = None;
 
 fn log_bwrite_all(buffer: &[u8]) {
     unsafe {
-        if let Some(ref uartcell) = LOG_TX {
-            let mut uart = uartcell.borrow_mut();
+        if let Some(ref mut tx) = LOG_TX {
             for b in buffer {
-                while match uart.write(*b) {
+                while match tx.write(*b) {
                     Ok(()) => false,
                     Err(_) => true,
                 } {}
@@ -77,7 +74,7 @@ fn log_bwrite_all(buffer: &[u8]) {
 #[no_mangle]
 pub fn main() -> ! {
     //configure IO ports for UART
-    let p = unsafe { pac::Peripherals::steal() };
+    let p = pac::Peripherals::take().unwrap();
     let pps = p.PPS;
     pps.rpa0r.write(|w| unsafe { w.rpa0r().bits(0b0001) }); // U1TX on RPA0
     pps.u1rxr.write(|w| unsafe { w.u1rxr().bits(0b0010) }); // U1RX on RPA4
@@ -95,7 +92,7 @@ pub fn main() -> ! {
     let uart = Uart::uart1(p.UART1, &clock, 115200);
     timer.delay_ms(10u32);
     let (tx, _) = uart.split();
-    unsafe { LOG_TX = Some(RefCell::new(tx)) };
+    unsafe { LOG_TX = Some(tx) };
     tinylog::set_bwrite_all(log_bwrite_all);
     info!("I2C oled display example");
     debug!("sysclock = {} Hz", sysclock.0);
@@ -103,11 +100,6 @@ pub fn main() -> ! {
     /* LED */
     let parts = p.PORTB.split();
     let mut led = parts.rb0.into_push_pull_output();
-
-    unsafe {
-        interrupt::enable_mv_irq();
-        interrupt::enable();
-    }
 
     let mut state = false;
 
