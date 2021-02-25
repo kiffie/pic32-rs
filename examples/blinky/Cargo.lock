@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "blinky"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "embedded-hal",
  "mips_rt",
@@ -62,7 +62,7 @@ dependencies = [
 [[package]]
 name = "mips_rt"
 version = "0.1.0"
-source = "git+https://github.com/kiffie/pic32-rs.git#0c0e64d999822e31683642bf4ada12799f9b5faf"
+source = "git+https://github.com/kiffie/pic32-rs.git#6f39f96c47ddca5fd02831e536e54ab9bc2dbb75"
 dependencies = [
  "bare-metal",
  "r0",
@@ -86,7 +86,7 @@ checksum = "546c37ac5d9e56f55e73b677106873d9d9f5190605e41a856503623648488cae"
 [[package]]
 name = "pic32-hal"
 version = "0.3.0"
-source = "git+https://github.com/kiffie/pic32-rs.git#0c0e64d999822e31683642bf4ada12799f9b5faf"
+source = "git+https://github.com/kiffie/pic32-rs.git#6f39f96c47ddca5fd02831e536e54ab9bc2dbb75"
 dependencies = [
  "embedded-hal",
  "enumflags2",
