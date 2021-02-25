@@ -53,7 +53,7 @@ fn main() -> ! {
     let size = 8192; // in bytes
     unsafe { ALLOCATOR.init(start, size) }
 
-    let p = unsafe { pac::Peripherals::steal() };
+    let p = pac::Peripherals::take().unwrap();
 
     let parts = p.PORTB.split();
     let mut led = parts.rb5.into_push_pull_output();
