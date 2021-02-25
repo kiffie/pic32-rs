@@ -8,15 +8,15 @@
 #![no_main]
 #![no_std]
 
+use core::panic::PanicInfo;
+use embedded_hal::blocking::delay::DelayMs;
+use embedded_hal::digital::v2::*;
 #[allow(unused_imports)]
 use mips_rt;
-use core::panic::PanicInfo;
-use embedded_hal::digital::v2::*;
-use embedded_hal::blocking::delay::DelayMs;
 use pic32_hal::coretimer::Delay;
 use pic32_hal::gpio::GpioExt;
 use pic32_hal::pac;
-    use pic32_hal::time::U32Ext;
+use pic32_hal::time::U32Ext;
 
 // PIC32 configuration registers for PIC32MX1xx and PIC32MX2xx
 #[cfg(any(
