@@ -120,7 +120,7 @@ macro_rules! log {
             $crate::__private_api_log(
                 format_args!($($arg)+),
                 lvl,
-                &(module_path!(), line!()),
+                &(file!(), line!()),
             );
         }
     });
