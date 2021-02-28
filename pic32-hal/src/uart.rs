@@ -1,9 +1,13 @@
 //! UART driver
 
+use core::fmt;
 use core::marker::PhantomData;
-use crate::clock::Osc;
 
+use crate::clock::Osc;
 use crate::pac::{UART1, UART2};
+
+use embedded_hal::prelude::*;
+use nb::block;
 
 /// Uart
 pub struct Uart<UART> {
@@ -127,3 +131,13 @@ macro_rules! uart_impl {
 
 uart_impl!(uart1, UART1);
 uart_impl!(uart2, UART2);
+
+impl<UART> fmt::Write for Tx<UART>
+where
+    Tx<UART>: embedded_hal::serial::Write<u8>,
+{
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        let _ = s.as_bytes().iter().map(|c| block!(self.write(*c))).last();
+        Ok(())
+    }
+}
