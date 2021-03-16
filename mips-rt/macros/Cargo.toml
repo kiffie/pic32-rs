@@ -1,0 +1,23 @@
+[package]
+name = "mips-rt-macros"
+version = "0.2.0"
+authors = ["Stephan <kiffie@mailbox.org"]
+edition = "2018"
+categories = ["embedded", "no-std"]
+description = "Attributes re-exported in `mips-rt`"
+keywords = ["mips", "pic32", "runtime", "startup"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0"
+proc-macro2 = "1.0"
+
+[dependencies.syn]
+features = ["extra-traits", "full"]
+version = "1.0"
+
+[dev-dependencies]
+mips-rt = { path = "..", version = "0.6" }

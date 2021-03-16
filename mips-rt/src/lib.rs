@@ -3,6 +3,8 @@
 
 #![no_std]
 
+pub use macros::entry;
+use mips_rt_macros as macros;
 
 #[doc(hidden)]
 #[no_mangle]

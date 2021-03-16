@@ -11,8 +11,8 @@
 use core::panic::PanicInfo;
 use embedded_hal::blocking::delay::DelayMs;
 use embedded_hal::digital::v2::*;
-#[allow(unused_imports)]
 use mips_rt;
+use mips_rt::entry;
 use pic32_hal::coretimer::Delay;
 use pic32_hal::gpio::GpioExt;
 use pic32_hal::pac;
@@ -32,8 +32,8 @@ pub static CONFIGSFRS: [u32; 4] = [
     0x7ffffffb, // DEVCFG0
 ];
 
-#[no_mangle]
-pub fn main() -> ! {
+#[entry]
+fn main() -> ! {
     let p = pac::Peripherals::take().unwrap();
     // setup clock control object
     let sysclock = 40_000_000_u32.hz();

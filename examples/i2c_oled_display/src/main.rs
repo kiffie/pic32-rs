@@ -6,8 +6,8 @@
 
 use core::panic::PanicInfo;
 
-#[allow(unused_imports)]
 use mips_rt;
+use mips_rt::entry;
 use tinylog;
 use tinylog::{debug, error, info};
 
@@ -71,8 +71,8 @@ fn log_bwrite_all(buffer: &[u8]) {
     }
 }
 
-#[no_mangle]
-pub fn main() -> ! {
+#[entry]
+fn main() -> ! {
     //configure IO ports for UART
     let p = pac::Peripherals::take().unwrap();
     let pps = p.PPS;

@@ -13,6 +13,7 @@
 
 use panic_halt as _;
 
+use mips_rt::entry;
 use alloc_pic32::Pic32Heap;
 use embedded_hal::digital::v2::*;
 use pic32_hal::gpio::GpioExt;
@@ -46,7 +47,7 @@ pub static CONFIGSFRS: [u32; 4] = [
 #[global_allocator]
 static ALLOCATOR: Pic32Heap = Pic32Heap::empty();
 
-#[no_mangle]
+#[entry]
 fn main() -> ! {
     // Initialize the allocator BEFORE you use it
     let start = mips_rt::heap_start() as usize;
