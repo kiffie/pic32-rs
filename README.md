@@ -28,8 +28,9 @@ rustup component add llvm-tools-preview
 
 [cargo-binutils](https://github.com/rust-embedded/cargo-binutils) includes
 `cargo-objcopy` that can be used to generate Intel HEX
-files. When other tools are used to generate HEX files or if your Flash memory programmer can
-deal with ELF files then cargo-binutils is not needed.
+files. When other tools are used to generate HEX files (see below) or
+if your Flash memory programmer can deal with ELF files then
+cargo-binutils is not needed.
 
 This code can be compiled with the nightly toolchain using cargo.
 
@@ -57,11 +58,36 @@ release build may make sense.
 cargo build --release
 ```
 
-To create a Intel hex file, `cargo-objcopy` can be used.
+## Creating hex files
+
+The MMU-less PIC32 variants have a simple Fixed Mapping Translation (FMT)
+mechanism integrated in their cores that converts the virtual addresses used
+by the processor and known to the compiler to physical addresses. However, the
+Flash memory controller of the PIC32 MCUs operates on physical addresses.
+
+### Hex files with virtual addresses
+
+If your programmer (such as [pic32prog](https://github.com/sergev/pic32prog))
+accepts virtual addresses, ```cargo-objcopy``` can be used.
 
 ```sh
 cargo objcopy --release -- -O ihex somefilename.hex
 ```
+
+### Hex files with physical addresses
+
+If your programmer (such as the MPLAB IPE tools) accepts physical addresses only
+you need to create hex files that include physical addressed. One way to create
+such hex file is to use the tool ```xc32-bin2hex```, which is part of the
+XC32 compiler toolchain. This tools converts the virtual addresses used in an ELF
+file to physical addresses before writing the hex file.
+
+```sh
+xc32-bin2hex target/mipsel-unknown-none/<your_elf_file>
+```
+
+An alternative to ```xc32-bin2hex``` is ```pic32-bin2hex```, which is part of the
+[chipKIT compiler](https://github.com/chipKIT32/chipKIT-compiler-builds/releases).
 
 ## Details on Linking
 
