@@ -2,7 +2,8 @@
 //!
 //! Enable/disable and set priorities of interrupts in Multi-vectored mode
 
-use crate::pac::{generic::{RegisterSpec, Reg}, INT};
+use crate::pac::INT;
+use crate::pac_crate::{RegisterSpec, Reg};
 use core::convert::TryFrom;
 use core::marker::PhantomData;
 use core::ptr::{read_volatile, write_volatile};

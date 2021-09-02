@@ -34,7 +34,7 @@ pub static CONFIGSFRS: [u32; 4] = [
 ];
 
 // PIC32 configuration registers for PIC32MX274
-#[cfg(feature = "pic32mx274fxxxb")]
+#[cfg(feature = "pic32mx2x4fxxxb")]
 #[link_section = ".configsfrs"]
 #[no_mangle]
 pub static CONFIGSFRS: [u32; 4] = [

@@ -315,7 +315,7 @@ port!(PORTB, portb, [
 ]);
 
 // PIC32MX2xx 28pin XLP USB devices
-#[cfg(feature = "pic32mx274fxxxb")]
+#[cfg(feature = "pic32mx2x4fxxxb")]
 port!(PORTA, porta, [
     RA0: (ra0, 0, Input<Analog>, true),
     RA1: (ra1, 1, Input<Analog>, true),
@@ -324,7 +324,7 @@ port!(PORTA, porta, [
     RA4: (ra4, 4, Input<Floating>),
 ]);
 
-#[cfg(feature = "pic32mx274fxxxb")]
+#[cfg(feature = "pic32mx2x4fxxxb")]
 port!(PORTB, portb, [
     RB0: (rb0, 0, Input<Analog>, true),
     RB1: (rb1, 1, Input<Analog>, true),

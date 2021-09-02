@@ -13,7 +13,7 @@ use crate::time::U32Ext;
 ))]
 pub mod refclock;
 
-#[cfg(feature = "pic32mx274fxxxb")]
+#[cfg(feature = "pic32mx2x4fxxxb")]
 use crate::pac::CRU;
 
 #[cfg(any(
@@ -23,7 +23,7 @@ use crate::pac::CRU;
 ))]
 use crate::pac::OSC;
 
-#[cfg(feature = "pic32mx274fxxxb")]
+#[cfg(feature = "pic32mx2x4fxxxb")]
 pub struct Osc {
     cru: CRU,
     sysclock: Hertz,
@@ -39,7 +39,7 @@ pub struct Osc {
     sysclock: Hertz,
 }
 
-#[cfg(feature = "pic32mx274fxxxb")]
+#[cfg(feature = "pic32mx2x4fxxxb")]
 impl Osc {
 
     /// Create a new Osc from a possibly constant sysclock value. The sysclock

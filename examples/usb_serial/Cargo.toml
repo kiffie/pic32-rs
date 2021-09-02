@@ -7,7 +7,7 @@ edition = "2018"
 
 [features]
 pic32mx2xxfxxxb = ["pic32-hal/pic32mx2xxfxxxb"]
-pic32mx274fxxxb = ["pic32-hal/pic32mx274fxxxb"]
+pic32mx2x4fxxxb = ["pic32-hal/pic32mx2x4fxxxb"]
 default = ["pic32mx2xxfxxxb"]
 
 [dependencies]
