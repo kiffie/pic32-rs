@@ -11,15 +11,11 @@
 #![no_main]
 #![feature(alloc_error_handler)]
 
-use panic_halt as _;
-
-use mips_rt::entry;
 use alloc_pic32::Pic32Heap;
 use embedded_hal::digital::v2::*;
-use pic32_hal::gpio::GpioExt;
-use pic32_hal::pac;
-use pic32_hal::usb::UsbBus;
-
+use mips_rt::entry;
+use panic_halt as _;
+use pic32_hal::{gpio::GpioExt, pac, usb::UsbBus};
 use usb_device::prelude::*;
 
 // PIC32 configuration registers for PIC32MX2xx
@@ -63,12 +59,13 @@ fn main() -> ! {
     let usb_bus = UsbBus::new(p.USB);
     let mut serial = usbd_serial::SerialPort::new(&usb_bus);
 
-    let mut usb_dev = UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0x16c0, 0x27dd))
-        .manufacturer("Fake company")
-        .product("Serial port")
-        .serial_number("TEST")
-        .device_class(usbd_serial::USB_CLASS_CDC)
-        .build();
+    let mut usb_dev =
+        UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0x16c0, 0x27dd))
+            .manufacturer("Fake company")
+            .product("Serial port")
+            .serial_number("TEST")
+            .device_class(usbd_serial::USB_CLASS_CDC)
+            .build();
 
     loop {
         if !usb_dev.poll(&mut [&mut serial]) {

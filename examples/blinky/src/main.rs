@@ -9,24 +9,16 @@
 #![no_main]
 #![no_std]
 
-use core::panic::PanicInfo;
-use core::fmt::Write;
-use embedded_hal::blocking::delay::DelayMs;
-use embedded_hal::digital::v2::*;
-use mips_rt;
-use mips_rt::entry;
-use pic32_hal::clock::Osc;
-use pic32_hal::coretimer::Delay;
-use pic32_hal::gpio::GpioExt;
-use pic32_hal::pac;
-use pic32_hal::time::U32Ext;
-use pic32_hal::uart::Uart;
+use core::{fmt::Write, panic::PanicInfo};
+
+use embedded_hal::{blocking::delay::DelayMs, digital::v2::*};
+use mips_rt::{self, entry};
+use pic32_hal::{
+    clock::Osc, coretimer::Delay, gpio::GpioExt, pac, time::U32Ext, uart::Uart,
+};
 
 // PIC32 configuration registers for PIC32MX1xx and PIC32MX2xx
-#[cfg(any(
-    feature = "pic32mx1xxfxxxb",
-    feature = "pic32mx2xxfxxxb"
-))]
+#[cfg(any(feature = "pic32mx1xxfxxxb", feature = "pic32mx2xxfxxxb"))]
 #[link_section = ".configsfrs"]
 #[no_mangle]
 pub static CONFIGSFRS: [u32; 4] = [
