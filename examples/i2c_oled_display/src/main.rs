@@ -161,13 +161,11 @@ fn main() -> ! {
                 debug!("left");
                 move_right = false;
             }
+        } else if x > 0 {
+            x -= 1;
         } else {
-            if x > 0 {
-                x -= 1;
-            } else {
-                debug!("right");
-                move_right = true;
-            }
+            debug!("right");
+            move_right = true;
         }
     }
 }
