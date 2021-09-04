@@ -13,9 +13,7 @@ use core::{fmt::Write, panic::PanicInfo};
 
 use embedded_hal::{blocking::delay::DelayMs, digital::v2::*};
 use mips_rt::{self, entry};
-use pic32_hal::{
-    clock::Osc, coretimer::Delay, gpio::GpioExt, pac, time::U32Ext, uart::Uart,
-};
+use pic32_hal::{clock::Osc, coretimer::Delay, gpio::GpioExt, pac, time::U32Ext, uart::Uart};
 
 // PIC32 configuration registers for PIC32MX1xx and PIC32MX2xx
 #[cfg(any(feature = "pic32mx1xxfxxxb", feature = "pic32mx2xxfxxxb"))]

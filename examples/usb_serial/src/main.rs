@@ -59,13 +59,12 @@ fn main() -> ! {
     let usb_bus = UsbBus::new(p.USB);
     let mut serial = usbd_serial::SerialPort::new(&usb_bus);
 
-    let mut usb_dev =
-        UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0x16c0, 0x27dd))
-            .manufacturer("Fake company")
-            .product("Serial port")
-            .serial_number("TEST")
-            .device_class(usbd_serial::USB_CLASS_CDC)
-            .build();
+    let mut usb_dev = UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0x16c0, 0x27dd))
+        .manufacturer("Fake company")
+        .product("Serial port")
+        .serial_number("TEST")
+        .device_class(usbd_serial::USB_CLASS_CDC)
+        .build();
 
     loop {
         if !usb_dev.poll(&mut [&mut serial]) {
