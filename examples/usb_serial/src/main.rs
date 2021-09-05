@@ -11,15 +11,11 @@
 #![no_main]
 #![feature(alloc_error_handler)]
 
-use panic_halt as _;
-
-use mips_rt::entry;
 use alloc_pic32::Pic32Heap;
 use embedded_hal::digital::v2::*;
-use pic32_hal::gpio::GpioExt;
-use pic32_hal::pac;
-use pic32_hal::usb::UsbBus;
-
+use mips_rt::entry;
+use panic_halt as _;
+use pic32_hal::{gpio::GpioExt, pac, usb::UsbBus};
 use usb_device::prelude::*;
 
 // PIC32 configuration registers for PIC32MX2xx

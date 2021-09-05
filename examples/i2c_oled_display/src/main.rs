@@ -6,31 +6,30 @@
 
 use core::panic::PanicInfo;
 
-use mips_rt;
-use mips_rt::entry;
-use tinylog;
-use tinylog::{debug, error, info};
-
-use embedded_hal::blocking::delay::DelayMs;
-use embedded_hal::digital::v2::{OutputPin, ToggleableOutputPin};
-use embedded_hal::serial::Write;
-
-use pic32_hal::clock::Osc;
-use pic32_hal::coretimer::Delay;
-use pic32_hal::gpio::GpioExt;
-use pic32_hal::i2c::{Fscl, I2c};
-use pic32_hal::pac;
-use pic32_hal::pac::UART1;
-use pic32_hal::time::U32Ext;
-use pic32_hal::uart::{Tx, Uart};
-
-use ssd1306::mode::GraphicsMode;
-use ssd1306::Builder;
-
-use embedded_graphics::fonts::{Font12x16, Font6x12, Font6x8, Font8x16};
-use embedded_graphics::image::Image1BPP;
-use embedded_graphics::prelude::*;
-use embedded_graphics::Drawing;
+use embedded_graphics::{
+    fonts::{Font12x16, Font6x12, Font6x8, Font8x16},
+    image::Image1BPP,
+    prelude::*,
+    Drawing,
+};
+use embedded_hal::{
+    blocking::delay::DelayMs,
+    digital::v2::{OutputPin, ToggleableOutputPin},
+    serial::Write,
+};
+use mips_rt::{self, entry};
+use pic32_hal::{
+    clock::Osc,
+    coretimer::Delay,
+    gpio::GpioExt,
+    i2c::{Fscl, I2c},
+    pac,
+    pac::UART1,
+    time::U32Ext,
+    uart::{Tx, Uart},
+};
+use ssd1306::{mode::GraphicsMode, Builder};
+use tinylog::{self, debug, error, info};
 
 const TL_LOGLEVEL: tinylog::Level = tinylog::Level::Debug;
 
@@ -162,13 +161,11 @@ fn main() -> ! {
                 debug!("left");
                 move_right = false;
             }
+        } else if x > 0 {
+            x -= 1;
         } else {
-            if x > 0 {
-                x -= 1;
-            } else {
-                debug!("right");
-                move_right = true;
-            }
+            debug!("right");
+            move_right = true;
         }
     }
 }

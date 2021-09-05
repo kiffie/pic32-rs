@@ -81,7 +81,7 @@ dependencies = [
 [[package]]
 name = "mips-rt-macros"
 version = "0.2.0"
-source = "git+https://github.com/kiffie/pic32-rs.git#3160553123d77c4c3aa8b30ca055c0a48c7ffaec"
+source = "git+https://github.com/kiffie/pic32-rs.git#f460a6610d685f0db0b71a738ae7ad24a481899b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -91,7 +91,7 @@ dependencies = [
 [[package]]
 name = "mips_rt"
 version = "0.2.0"
-source = "git+https://github.com/kiffie/pic32-rs.git#3160553123d77c4c3aa8b30ca055c0a48c7ffaec"
+source = "git+https://github.com/kiffie/pic32-rs.git#f460a6610d685f0db0b71a738ae7ad24a481899b"
 dependencies = [
  "bare-metal",
  "mips-rt-macros",
@@ -136,7 +136,7 @@ dependencies = [
 [[package]]
 name = "pic32-hal"
 version = "0.3.0"
-source = "git+https://github.com/kiffie/pic32-rs.git#3160553123d77c4c3aa8b30ca055c0a48c7ffaec"
+source = "git+https://github.com/kiffie/pic32-rs.git#f460a6610d685f0db0b71a738ae7ad24a481899b"
 dependencies = [
  "embedded-hal",
  "enumflags2",
@@ -237,7 +237,7 @@ dependencies = [
 [[package]]
 name = "tinylog"
 version = "0.1.0"
-source = "git+https://github.com/kiffie/pic32-rs.git#3160553123d77c4c3aa8b30ca055c0a48c7ffaec"
+source = "git+https://github.com/kiffie/pic32-rs.git#f460a6610d685f0db0b71a738ae7ad24a481899b"
 
 [[package]]
 name = "tinytga"
