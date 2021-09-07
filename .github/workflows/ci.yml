@@ -1,0 +1,27 @@
+name: Check examples
+
+on:
+    push:
+        branches: [master]
+    pull_request:
+
+jobs:
+    ci-examples:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                example: [blinky, i2c_oled_display, usb_serial]
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions-rs/toolchain@v1
+              with:
+                profile: minimal
+                toolchain: nightly
+                override: true
+                components: rust-src, rustfmt, clippy
+            - run: cargo fmt -- --check
+              working-directory: ./examples/${{ matrix.example }}
+            - run: cargo check
+              working-directory: ./examples/${{ matrix.example }}
+            - run: cargo clippy --no-deps
+              working-directory: ./examples/${{ matrix.example }}
