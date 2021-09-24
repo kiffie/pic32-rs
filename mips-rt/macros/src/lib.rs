@@ -1,7 +1,7 @@
 //! Internal implementation details of `mips-rt`.
 //!
 //! Do not use this crate directly.
-//! Based on `cortex_m_rt_macros` (https://github.com/rust-embedded/cortex-m-rt/)
+//! Based on [`cortex_m_rt_macros`](https://github.com/rust-embedded/cortex-m-rt/)
 
 use proc_macro::TokenStream;
 use proc_macro2::Span;
