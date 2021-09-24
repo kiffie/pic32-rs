@@ -9,7 +9,7 @@
 # ignored.
 CC=pic32-gcc
 
-LIB = libnative
+LIB = libmips-rt
 
 CFLAGS = -Wall -mips32r2 -msoft-float -Os -Iinclude
 
