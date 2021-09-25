@@ -33,10 +33,10 @@ SECTIONS
     KEEP(*(.reset))
     KEEP(*(.reset.startup))
   } > kseg1_boot_mem
-  .bev_excpt _BEV_EXCPT_ADDR :
+  /* .bev_excpt _BEV_EXCPT_ADDR :
   {
     KEEP(*(.bev_handler))
-  } > kseg1_boot_mem
+  } > kseg1_boot_mem */
   /* Debug exception vector */
   /* Space reserved for the debug executive */
 /*  .dbg_code _DBG_CODE_ADDR (NOLOAD) :

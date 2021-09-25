@@ -57,7 +57,7 @@ version = "0.3.0"
 dependencies = [
  "embedded-graphics",
  "embedded-hal",
- "mips_rt",
+ "mips-rt",
  "pic32-hal",
  "ssd1306",
  "tinylog",
@@ -79,23 +79,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "mips-rt-macros"
-version = "0.2.0"
-source = "git+https://github.com/kiffie/pic32-rs.git#f460a6610d685f0db0b71a738ae7ad24a481899b"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "mips_rt"
-version = "0.2.0"
-source = "git+https://github.com/kiffie/pic32-rs.git#f460a6610d685f0db0b71a738ae7ad24a481899b"
+name = "mips-rt"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04ef9b6faac46760cc54840023bcf28290b64aeaf7164f5fe39dcbc07b4faba7"
 dependencies = [
  "bare-metal",
  "mips-rt-macros",
  "r0",
+]
+
+[[package]]
+name = "mips-rt-macros"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2c223fbc6420c51757552c6e738a7b58385ed2de415adb51e4f5bae324e29d1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -136,12 +138,12 @@ dependencies = [
 [[package]]
 name = "pic32-hal"
 version = "0.3.0"
-source = "git+https://github.com/kiffie/pic32-rs.git#f460a6610d685f0db0b71a738ae7ad24a481899b"
+source = "git+https://github.com/kiffie/pic32-rs.git#a3e5b24c61adfeabec047096b7466c6a2cb1a2d9"
 dependencies = [
  "embedded-hal",
  "enumflags2",
  "mips-mcu",
- "mips_rt",
+ "mips-rt",
  "nb 0.1.3",
  "pic32mx2xx",
 ]
@@ -216,9 +218,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.75"
+version = "1.0.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b7f58f7e8eaa0009c5fec437aabf511bd9933e4b2d7407bd05273c01a8906ea7"
+checksum = "5239bc68e0fef57495900cfea4e8dc75596d9a319d7e16b1e0a440d24e6fe0a0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -237,7 +239,7 @@ dependencies = [
 [[package]]
 name = "tinylog"
 version = "0.1.0"
-source = "git+https://github.com/kiffie/pic32-rs.git#f460a6610d685f0db0b71a738ae7ad24a481899b"
+source = "git+https://github.com/kiffie/pic32-rs.git#a3e5b24c61adfeabec047096b7466c6a2cb1a2d9"
 
 [[package]]
 name = "tinytga"
