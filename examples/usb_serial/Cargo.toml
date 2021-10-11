@@ -14,7 +14,7 @@ default = ["pic32mx2xxfxxxb"]
 mips-rt = "0.2.0"
 alloc-pic32 = { git = "https://github.com/kiffie/alloc-pic32.git" }
 embedded-hal = "0.2.3"
-pic32-hal = { git = "https://github.com/kiffie/pic32-rs.git", features = ["usb-device"] }
+pic32-hal = { version = "0.4.0", features = ["usb-device"] }
 panic-halt = "0.2.0"
 usb-device = "0.2.5"
 usbd-serial = "0.1.0"

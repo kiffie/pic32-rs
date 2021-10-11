@@ -14,7 +14,7 @@ default = ["pic32mx1xxfxxxb"]
 mips-rt = "0.2.0"
 embedded-hal = "0.2.3"
 tinylog = { git = "https://github.com/kiffie/pic32-rs.git" }
-pic32-hal = { git = "https://github.com/kiffie/pic32-rs.git" }
+pic32-hal = "0.4.0"
 ssd1306 = "0.2.6"
 embedded-graphics = "0.4.9"
 
