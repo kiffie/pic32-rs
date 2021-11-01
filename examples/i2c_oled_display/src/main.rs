@@ -31,29 +31,63 @@ use pic32_hal::{
 use ssd1306::{mode::GraphicsMode, Builder};
 use tinylog::{self, debug, error, info};
 
+#[cfg(feature = "pic32mx1xxfxxxb")]
+use pic32_config_sector::pic32mx1xx::*;
+#[cfg(feature = "pic32mx2x4fxxxb")]
+use pic32_config_sector::pic32mx2x4::*;
+
 const TL_LOGLEVEL: tinylog::Level = tinylog::Level::Debug;
 
 // PIC32 configuration registers for PIC32MX150
 #[cfg(feature = "pic32mx1xxfxxxb")]
 #[link_section = ".configsfrs"]
-#[no_mangle]
-pub static CONFIGSFRS: [u32; 4] = [
-    0xdfffffff, // DEVCFG3
-    0xfff9ffd9, // DEVCFG2
-    0xff7fcfd9, // DEVCFG1
-    0x7ffffffb, // DEVCFG0
-];
+#[used]
+pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
+    // DEVCFG3
+    .IOL1WAY(IOL1WAY::OFF)
+    .PMDL1WAY(PMDL1WAY::OFF)
+    // DEVCFG2
+    .FPLLIDIV(FPLLIDIV::DIV_2)
+    .FPLLMUL(FPLLMUL::MUL_20)
+    .FPLLODIV(FPLLODIV::DIV_2)
+    // DEVCFG1
+    .FWDTEN(FWDTEN::OFF)
+    .FPBDIV(FPBDIV::DIV_1)
+    .FSOSCEN(FSOSCEN::OFF)
+    .FNOSC(FNOSC::FRCPLL)
+    // DEVCFG0
+    .JTAGEN(JTAGEN::OFF)
+    .ICESEL(ICESEL::ICS_PGx1)
+    .build();
 
 // PIC32 configuration registers for PIC32MX274
 #[cfg(feature = "pic32mx2x4fxxxb")]
 #[link_section = ".configsfrs"]
-#[no_mangle]
-pub static CONFIGSFRS: [u32; 4] = [
-    0xcf3fffff, // DEVCFG3
-    0x7fe9f9d9, // DEVCFG2
-    0xff74cfd9, // DEVCFG1
-    0xfffffff3, // DEVCFG0
-];
+#[used]
+pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
+    // DEVCFG3
+    .IOL1WAY(IOL1WAY::OFF)
+    .PMDL1WAY(PMDL1WAY::OFF)
+    .AI2C2(AI2C2::OFF)
+    .AI2C1(AI2C1::OFF)
+    // DEVCFG2
+    .FDSEN(FDSEN::OFF)
+    .BOREN(BOREN::OFF)
+    .FPLLODIV(FPLLODIV::DIV_2)
+    .UPLLIDIV(UPLLIDIV::DIV_2)
+    .FPLLMUL(FPLLMUL::MUL_20)
+    .FPLLIDIV(FPLLIDIV::DIV_2)
+    // DEVCFG1
+    .FWDTEN(FWDTEN::OFF)
+    .WDTPS(WDTPS::PS1048576)
+    .FPBDIV(FPBDIV::DIV_1)
+    .FSOSCEN(FSOSCEN::OFF)
+    .FNOSC(FNOSC::SPLL)
+    // FEVCFG0
+    .ICESEL(ICESEL::ICS_PGx2)
+    .JTAGEN(JTAGEN::OFF)
+    .DEBUG(DEBUG::OFF)
+    .build();
 
 static mut LOG_TX: Option<Tx<UART1>> = None;
 

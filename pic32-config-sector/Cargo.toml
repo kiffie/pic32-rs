@@ -1,0 +1,11 @@
+[package]
+name = "pic32-config-sector"
+description = "Calculate constant values for PIC32 configuration words"
+version = "0.1.1"
+authors = ["Stephan <kiffie@mailbox.org>"]
+license = "MIT OR Apache-2.0"
+edition = "2021"
+keywords = ["no-std", "mips", "pic32", "hal"]
+include = ["README.md", "NOTICE", "/src"]
+
+[dependencies]

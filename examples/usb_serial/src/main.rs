@@ -18,27 +18,61 @@ use panic_halt as _;
 use pic32_hal::{gpio::GpioExt, pac, usb::UsbBus};
 use usb_device::prelude::*;
 
+#[cfg(feature = "pic32mx2x4fxxxb")]
+use pic32_config_sector::pic32mx2x4::*;
+#[cfg(feature = "pic32mx2xxfxxxb")]
+use pic32_config_sector::pic32mx2xx::*;
+
 // PIC32 configuration registers for PIC32MX2xx
 #[cfg(feature = "pic32mx2xxfxxxb")]
 #[link_section = ".configsfrs"]
-#[no_mangle]
-pub static CONFIGSFRS: [u32; 4] = [
-    0x0fffffff, // DEVCFG3
-    0xfff979f9, // DEVCFG2
-    0xff74cddb, // DEVCFG1
-    0x7fffffeb, // DEVCFG0
-];
+#[used]
+pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
+    // DEVCFG3
+    .FVBUSONIO(FVBUSONIO::OFF)
+    .FUSBIDIO(FUSBIDIO::OFF)
+    // DEVCFG2
+    .FPLLODIV(FPLLODIV::DIV_2)
+    .UPLLEN(UPLLEN::ON)
+    .UPLLIDIV(UPLLIDIV::DIV_2)
+    .FPLLMUL(FPLLMUL::MUL_24)
+    .FPLLIDIV(FPLLIDIV::DIV_2)
+    // DEVCFG 1
+    .FWDTEN(FWDTEN::OFF)
+    .WDTPS(WDTPS::PS1048576)
+    .FPBDIV(FPBDIV::DIV_1)
+    .POSCMOD(POSCMOD::XT)
+    .FSOSCEN(FSOSCEN::OFF)
+    .FNOSC(FNOSC::PRIPLL)
+    // DEVCFG 0
+    .JTAGEN(JTAGEN::OFF)
+    .build();
 
 // PIC32 configuration registers for PIC32MX274
 #[cfg(feature = "pic32mx2x4fxxxb")]
 #[link_section = ".configsfrs"]
-#[no_mangle]
-pub static CONFIGSFRS: [u32; 4] = [
-    0x8fffffff, // DEVCFG3
-    0x7fe979d9, // DEVCFG2
-    0xff74cdd9, // DEVCFG1
-    0xffffffeb, // DEVCFG0
-];
+#[used]
+pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
+    // DEVCFG3
+    .FUSBIDIO(FUSBIDIO::OFF)
+    // DEVCFG2
+    .FDSEN(FDSEN::OFF)
+    .FPLLODIV(FPLLODIV::DIV_2)
+    .UPLLEN(UPLLEN::ON)
+    .UPLLIDIV(UPLLIDIV::DIV_2)
+    .FPLLICLK(FPLLICLK::PLL_POSC)
+    .FPLLMUL(FPLLMUL::MUL_24)
+    .FPLLIDIV(FPLLIDIV::DIV_2)
+    // DEVCFG1
+    .FWDTEN(FWDTEN::OFF)
+    .WDTPS(WDTPS::PS1048576)
+    .FPBDIV(FPBDIV::DIV_1)
+    .POSCMOD(POSCMOD::XT)
+    .FSOSCEN(FSOSCEN::OFF)
+    .FNOSC(FNOSC::SPLL)
+    // DEVCFG0
+    .JTAGEN(JTAGEN::OFF)
+    .build();
 
 #[global_allocator]
 static ALLOCATOR: Pic32Heap = Pic32Heap::empty();

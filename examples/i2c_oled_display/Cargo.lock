@@ -58,6 +58,7 @@ dependencies = [
  "embedded-graphics",
  "embedded-hal",
  "mips-rt",
+ "pic32-config-sector",
  "pic32-hal",
  "ssd1306",
  "tinylog",
@@ -136,10 +137,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "pic32-hal"
-version = "0.4.0"
+name = "pic32-config-sector"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9620070d9282ae6dac0c18d552d3876808f91e4bf7e981c6f35bbe43b5112f9"
+checksum = "f04fcef5df32d1b64bd124e9167d6e8312ab3b22b058c58dbf7e93b105721c92"
+
+[[package]]
+name = "pic32-hal"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4186fbd24c1b26a182991a955b429d90cb7009d1d9b583805ce78d4d26833a9a"
 dependencies = [
  "embedded-hal",
  "enumflags2",
@@ -161,9 +168,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.29"
+version = "1.0.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9f5105d4fdaab20335ca9565e106a5d9b82b6219b5ba735731124ac6711d23d"
+checksum = "ba508cc11742c0dc5c1659771673afbab7a0efab23aa17e854cbab0837ed0b43"
 dependencies = [
  "unicode-xid",
 ]
@@ -219,9 +226,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.80"
+version = "1.0.81"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d010a1623fbd906d51d650a9916aaefc05ffa0e4053ff7fe601167f3e715d194"
+checksum = "f2afee18b8beb5a596ecb4a2dce128c719b4ba399d34126b9e4396e3f9860966"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -240,7 +247,7 @@ dependencies = [
 [[package]]
 name = "tinylog"
 version = "0.1.0"
-source = "git+https://github.com/kiffie/pic32-rs.git#29f5e6f42e8d8a56871dbc8d26ed6168341269b7"
+source = "git+https://github.com/kiffie/pic32-rs.git#84ed2e665c58033ef0d6f5422497017628f1ca89"
 
 [[package]]
 name = "tinytga"

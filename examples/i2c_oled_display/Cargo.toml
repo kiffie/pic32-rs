@@ -17,6 +17,7 @@ tinylog = { git = "https://github.com/kiffie/pic32-rs.git" }
 pic32-hal = "0.4.0"
 ssd1306 = "0.2.6"
 embedded-graphics = "0.4.9"
+pic32-config-sector = "0.1.0"
 
 [profile.release]
 opt-level = 2

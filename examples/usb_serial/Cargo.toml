@@ -18,6 +18,7 @@ pic32-hal = { version = "0.4.0", features = ["usb-device"] }
 panic-halt = "0.2.0"
 usb-device = "0.2.5"
 usbd-serial = "0.1.0"
+pic32-config-sector = "0.1.0"
 
 [profile.release]
 opt-level = 2

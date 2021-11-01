@@ -13,18 +13,28 @@ use core::{fmt::Write, panic::PanicInfo};
 
 use embedded_hal::{blocking::delay::DelayMs, digital::v2::*};
 use mips_rt::{self, entry};
+use pic32_config_sector::pic32mx2xx::*;
 use pic32_hal::{clock::Osc, coretimer::Delay, gpio::GpioExt, pac, time::U32Ext, uart::Uart};
 
 // PIC32 configuration registers for PIC32MX1xx and PIC32MX2xx
 #[cfg(any(feature = "pic32mx1xxfxxxb", feature = "pic32mx2xxfxxxb"))]
 #[link_section = ".configsfrs"]
-#[no_mangle]
-pub static CONFIGSFRS: [u32; 4] = [
-    0x0fffffff, // DEVCFG3
-    0xfff9ffd9, // DEVCFG2
-    0xff7fcfd9, // DEVCFG1
-    0x7ffffffb, // DEVCFG0
-];
+#[used]
+pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
+    .FVBUSONIO(FVBUSONIO::OFF)
+    .FUSBIDIO(FUSBIDIO::OFF)
+    .IOL1WAY(IOL1WAY::OFF)
+    .PMDL1WAY(PMDL1WAY::OFF)
+    .FPLLIDIV(FPLLIDIV::DIV_2)
+    .FPLLMUL(FPLLMUL::MUL_20)
+    .FPLLODIV(FPLLODIV::DIV_2)
+    .FNOSC(FNOSC::FRCPLL)
+    .FSOSCEN(FSOSCEN::OFF)
+    .FPBDIV(FPBDIV::DIV_1)
+    .FWDTEN(FWDTEN::OFF)
+    .JTAGEN(JTAGEN::OFF)
+    .ICESEL(ICESEL::ICS_PGx1)
+    .build();
 
 #[entry]
 fn main() -> ! {

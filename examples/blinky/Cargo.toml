@@ -14,7 +14,7 @@ default = ["pic32mx1xxfxxxb"]
 mips-rt = "0.2.0"
 embedded-hal = "0.2.3"
 pic32-hal = "0.4.0"
-
+pic32-config-sector = "0.1.0"
 [profile.release]
 opt-level = 2
 lto = true
