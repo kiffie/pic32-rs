@@ -25,6 +25,8 @@ use pic32_hal::{
     i2c::{Fscl, I2c},
     pac,
     pac::UART1,
+    pps::{MapPin, NoPin, PpsExt},
+    pps_no_pin,
     time::U32Ext,
     uart::{Tx, Uart},
 };
@@ -108,9 +110,9 @@ fn log_bwrite_all(buffer: &[u8]) {
 fn main() -> ! {
     //configure IO ports for UART
     let p = pac::Peripherals::take().unwrap();
-    let pps = p.PPS;
-    pps.rpa0r.write(|w| unsafe { w.rpa0r().bits(0b0001) }); // U1TX on RPA0
-    pps.u1rxr.write(|w| unsafe { w.u1rxr().bits(0b0010) }); // U1RX on RPA4
+    let porta = p.PORTA.split();
+    let portb = p.PORTB.split();
+    let vpins = p.PPS.split();
 
     // setup clock control object
     let sysclock = 40_000_000_u32.hz();
@@ -122,7 +124,11 @@ fn main() -> ! {
     let mut timer = Delay::new(sysclock);
 
     /* initialize clock control and uart */
-    let uart = Uart::uart1(p.UART1, &clock, 115200);
+    let txd = porta
+        .ra0
+        .into_push_pull_output()
+        .map_pin(vpins.outputs.u1tx);
+    let uart = Uart::uart1(p.UART1, &clock, 115200, pps_no_pin!(vpins.inputs.u1rx), txd);
     timer.delay_ms(10u32);
     let (tx, _) = uart.split();
     unsafe { LOG_TX = Some(tx) };
@@ -131,8 +137,7 @@ fn main() -> ! {
     debug!("sysclock = {} Hz", sysclock.0);
 
     /* LED */
-    let parts = p.PORTB.split();
-    let mut led = parts.rb0.into_push_pull_output();
+    let mut led = portb.rb0.into_push_pull_output();
 
     let mut state = false;
 

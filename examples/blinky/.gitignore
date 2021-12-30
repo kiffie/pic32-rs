@@ -1,3 +1,4 @@
 /target/
+/.vscode/
 *.hex
 **/*.rs.bk

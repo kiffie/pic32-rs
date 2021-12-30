@@ -1,6 +1,6 @@
 [package]
 name = "pic32-hal"
-version = "0.4.1"
+version = "0.5.0"
 authors = ["Stephan <kiffie@mailbox.org>"]
 edition = "2018"
 description = "Hardware Abstraction Layer (HAL) for PIC32 microcontrollers"

@@ -2,4 +2,4 @@
 
 BIN=blinky
 
-cargo objcopy --release -- -O ihex $BIN.hex
+cargo objcopy --release $* -- -O ihex $BIN.hex

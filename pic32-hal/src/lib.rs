@@ -1,4 +1,16 @@
-//! HAL library for PIC32
+//! A hardware abstraction layer for some PIC32 microcontrollers.
+//!
+//! This crate provides a thin low-level API on top of the register access API
+//! implemented by the PAC crate. The MCU can be selected by means of specific
+//! features.
+//!
+//! | Feature | Devices |
+//! |:--------------:|:-------:|
+//! | pic32mx1xxfxxxb | 28-pin PIC32MX1xx |
+//! | pic32mx2xxfxxxb | 28-pin PIC32MX2xx |
+//! | pic32mx2x4fxxxb | 28-pin PIC32MX2xx XLP |
+//!
+//! This documentation has been generated with `--features pic32mx2xxfxxxb`.
 
 #![no_std]
 #![feature(llvm_asm)]
@@ -22,6 +34,7 @@ use embedded_hal as hal;
 pub mod time;
 pub mod int;
 pub mod gpio;
+pub mod pps;
 pub mod uart;
 pub mod spi;
 pub mod i2c;

@@ -11,10 +11,18 @@
 
 use core::{fmt::Write, panic::PanicInfo};
 
-use embedded_hal::{blocking::delay::DelayMs, digital::v2::*};
+use embedded_hal::{blocking::delay::DelayMs, digital::v2::*, serial::Read};
 use mips_rt::{self, entry};
 use pic32_config_sector::pic32mx2xx::*;
-use pic32_hal::{clock::Osc, coretimer::Delay, gpio::GpioExt, pac, time::U32Ext, uart::Uart};
+use pic32_hal::{
+    clock::Osc,
+    coretimer::Delay,
+    gpio::GpioExt,
+    pac,
+    pps::{MapPin, NoPin, PpsExt},
+    time::U32Ext,
+    uart::Uart,
+};
 
 // PIC32 configuration registers for PIC32MX1xx and PIC32MX2xx
 #[cfg(any(feature = "pic32mx1xxfxxxb", feature = "pic32mx2xxfxxxb"))]
@@ -40,21 +48,31 @@ pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
 fn main() -> ! {
     let p = pac::Peripherals::take().unwrap();
 
-    let pps = p.PPS;
-    pps.rpb0r.write(|w| unsafe { w.rpb0r().bits(0b0010) }); // U2TX on RPB0
+    //pps.rpb0r.write(|w| unsafe { w.rpb0r().bits(0b0010) }); // U2TX on RPB0
 
     // setup clock control object
     let sysclock = 40_000_000_u32.hz();
     let clock = Osc::new(p.OSC, sysclock);
     let mut timer = Delay::new(sysclock);
 
-    let uart = Uart::uart2(p.UART2, &clock, 115200);
-    timer.delay_ms(10u32);
-    let (mut tx, _) = uart.split();
-    writeln!(tx, "Blinky example").unwrap();
-
     let parts = p.PORTB.split();
     let mut led = parts.rb5.into_push_pull_output();
+
+    let vpins = p.PPS.split();
+
+    let txd = parts
+        .rb0
+        .into_push_pull_output()
+        .map_pin(vpins.outputs.u2tx);
+
+    #[cfg(feature = "rx")]
+    let rxd = parts.rb1.into_floating_input().map_pin(vpins.inputs.u2rx);
+    #[cfg(not(feature = "rx"))]
+    let rxd = NoPin::new().map_pin(vpins.inputs.u2rx);
+    let uart = Uart::uart2(p.UART2, &clock, 115200, rxd, txd);
+    timer.delay_ms(10u32);
+    let (mut tx, mut rx) = uart.split();
+    writeln!(tx, "Blinky example").unwrap();
 
     let mut on = true;
     loop {
@@ -65,6 +83,9 @@ fn main() -> ! {
             led.set_low().unwrap();
         }
         on = !on;
+        if let Ok(byte) = rx.read() {
+            writeln!(tx, "read char: '{}'", byte as char).unwrap();
+        }
         timer.delay_ms(1000u32);
     }
 }
