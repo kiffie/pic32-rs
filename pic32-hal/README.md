@@ -1,7 +1,7 @@
 # pic32-hal
 
-![Crates.io](https://img.shields.io/crates/v/pic32-hal)
-![docs.rs](https://img.shields.io/docsrs/pic32-hal)
+[![Crates.io](https://img.shields.io/crates/v/pic32-hal)](https://crates.io/crates/pic32-hal)
+[![docs.rs](https://img.shields.io/docsrs/pic32-hal)](https://docs.rs/pic32-hal)
 
 A hardware abstraction layer for some PIC32 microcontrollers.
 
