@@ -1,5 +1,8 @@
 # pic32-config-sector
 
+[![Crates.io](https://img.shields.io/crates/v/pic32-config-sector.svg)](https://crates.io/crates/pic32-config-sector)
+[![docs.rs](https://img.shields.io/docsrs/pic32-config-sector.svg)](https://docs.rs/pic32-config-sector)
+
 Calculate constant values for PIC32 configuration words.
 
 This crate defines const structures that can be used to calculate values of

@@ -3,9 +3,11 @@ name = "pic32-config-sector"
 description = "Calculate constant values for PIC32 configuration words"
 version = "0.1.1"
 authors = ["Stephan <kiffie@mailbox.org>"]
+repository = "https://github.com/kiffie/pic32-rs/tree/master/pic32-config-sector"
 license = "MIT OR Apache-2.0"
 edition = "2021"
 keywords = ["no-std", "mips", "pic32", "hal"]
+categories = ["embedded", "hardware-support", "no-std"]
 include = ["README.md", "NOTICE", "/src"]
 
 [dependencies]
