@@ -1,6 +1,6 @@
 [package]
 name = "mips-rt-macros"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Stephan <kiffie@mailbox.org"]
 edition = "2018"
 repository = "https://github.com/kiffie/pic32-rs"

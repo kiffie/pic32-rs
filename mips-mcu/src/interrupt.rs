@@ -4,7 +4,7 @@
 
 // use core::sync::atomic::{self, Ordering};
 
-pub use bare_metal::{CriticalSection, Mutex, Nr};
+pub use bare_metal::{CriticalSection, Mutex};
 
 type IrqSave = u32;
 

@@ -13,7 +13,7 @@ LIB = libmipsmcu
 
 CFLAGS = -Wall -mips32r2 -msoft-float -Os -Iinclude
 
-OBJECTS = mips_irq.o
+OBJECTS = mips_irq.o mips_core_timer.o
 
 DEPS    = $(patsubst %.o, %.d, $(notdir $(OBJECTS)))
 

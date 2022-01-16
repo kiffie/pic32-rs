@@ -132,7 +132,7 @@ _startup:
         nop
 #        la      k0,_nmi_handler
 #        jr      k0
-        nop
+#        nop
 _no_nmi:
 
         ##################################################################
@@ -287,18 +287,52 @@ _no_nmi:
         mtc0    t0,_CP0_STATUS
 
         ##################################################################
-        # Call main. We do this via a thunk in the text section so that
-        # a normal jump and link can be used, enabling the startup code
-        # to work properly whether main is written in MIPS16 or MIPS32
-        # code. I.e., the linker will correctly adjust the JAL to JALX if
-        # necessary
+        # Call __pre_init
         ##################################################################
-        and     a0,a0,0
-        and     a1,a1,0
-        la      t0,_main_entry
-        jr      t0
+        la      t0,__pre_init
+        jalr    t0
         nop
 
+        ##################################################################
+        # clear the .bss section
+        ##################################################################
+        la      t0,__sbss
+        la      t1,__ebss
+        b       _bss_cond
+        nop
+_bss_lp:
+        sw      zero,0x0(t0)
+        addu    t0,4
+_bss_cond:
+        bltu    t0,t1,_bss_lp
+        nop
+
+        ##################################################################
+        # copy data from ROM into the .data section
+        ##################################################################
+        la      t0,__sidata
+        la      t1,__sdata
+        la      t2,__edata
+        b       _data_cond
+        nop
+_data_lp:
+        lw      t3,0x0(t0)
+        sw      t3,0x0(t1)
+        addu    t0,4
+        addu    t1,4
+_data_cond:
+        bltu    t1,t2,_data_lp
+        nop
+
+        ##################################################################
+        # Call main and enter an endless loop should main return
+        ##################################################################
+        la      t0,main
+        jalr    t0
+        nop
+_main_el:
+        b       _main_el
+        nop
         .end _startup
 
         ##################################################################
@@ -349,46 +383,3 @@ _cache_err_vector:
 
         .end _cache_err_vector
 #endif
-
-        .section .text.main_entry, "ax"
-        .align 2
-        .ent _main_entry
-_main_entry:
-
-        and     a0,a0,0
-        and     a1,a1,0
-
-        ##################################################################
-
-        # Call main
-        ##################################################################
-        la    	t0,rust_reset
-        jalr 	t0
-        nop
-
-#if defined(CALL_EXIT)
-        ##################################################################
-        # Call exit()
-        ##################################################################
-        jal exit
-        nop
-#endif
-
-        ##################################################################
-        # Just in case, go into infinite loop
-        # Call a software breakpoint only with -mdebugger compiler option
-        ##################################################################
-        .weak __exception_handler_break
-__crt0_exit:
-1:
-        la      v0,__exception_handler_break
-        beq     v0,0,0f
-        nop
-        jalr    v0
-        nop
-
-0:      b       1b
-        nop
-
-        .globl __crt0_exit
-        .end _main_entry

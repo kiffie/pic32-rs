@@ -15,6 +15,8 @@
 #![no_std]
 #![feature(llvm_asm)]
 
+#[cfg(not(feature = "device-selected"))]
+compile_error!("This crate requires one device feature to be enabled");
 use pic32mx2xx as pac_crate;
 
 #[cfg(feature = "pic32mx1xxfxxxb")]

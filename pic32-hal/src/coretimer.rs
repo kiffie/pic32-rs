@@ -7,18 +7,12 @@ use crate::hal::blocking::delay::{DelayMs, DelayUs};
 use crate::pac::INT; // interrupt controller
 use crate::time::Hertz;
 
+pub use mips_mcu::core_timer::read_count;
+use mips_mcu::core_timer::{read_compare, write_compare};
 use mips_mcu::interrupt;
 use mips_mcu::interrupt::Mutex;
 
 use core::cell::Cell;
-
-/// Read Count register (CP0 register 9, select 0)
-fn read_count() -> u32 {
-    let mut count;
-    // does not work with MIPS16
-    unsafe { llvm_asm!("mfc0 $0, $$9" : "=r"(count) : : : "volatile") };
-    count
-}
 
 /// Delay implementation based on read-only access to the core timer "count"
 /// register
@@ -108,7 +102,7 @@ impl Timer {
     /// Get the `Timer` singleton. Panics if the singleton is not available.
     pub fn take() -> Self {
         let timeropt = interrupt::free(|cs| {
-            let cell = TIMER.borrow(cs);
+            let cell = TIMER.borrow(*cs);
             cell.take()
         });
         timeropt.unwrap()
@@ -117,7 +111,7 @@ impl Timer {
     /// Return the `Timer` singleton.
     pub fn free(self) {
         interrupt::free(|cs| {
-            let cell = TIMER.borrow(cs);
+            let cell = TIMER.borrow(*cs);
             cell.replace(Some(self));
         });
     }
@@ -129,16 +123,14 @@ impl Timer {
 
     /// Read Compare register (CP0 register 11, select 0)
     pub fn read_compare(&self) -> u32 {
-        let mut compare;
-        // does not work with MIPS16
-        unsafe { llvm_asm!("mfc0 $0, $$11" : "=r"(compare) : : : "volatile") };
-        compare
+        read_compare()
     }
 
     /// Write to Compare register (CPP0 register 11, select 0)
     pub fn write_compare(&self, compare: u32) {
-        // does not work with MIPS16
-        unsafe { llvm_asm!("mtc0   $0, $$11" : : "r"(compare) : : "volatile") };
+        unsafe {
+            write_compare(compare);
+        }
     }
 
     /// Enable interrupts
@@ -156,6 +148,7 @@ impl Timer {
     /// Set interrupt priority and sub priority. A priority level of 0 is the
     /// lowest priority level and disables the interrupts.
     pub fn set_interrupt_prio(&self, int: &INT, prio: u8, subprio: u8) {
-        int.ipc0.modify(|_, w| unsafe { w.ctip().bits(prio).ctis().bits(subprio) });
+        int.ipc0
+            .modify(|_, w| unsafe { w.ctip().bits(prio).ctis().bits(subprio) });
     }
 }

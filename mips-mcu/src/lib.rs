@@ -1,9 +1,15 @@
 //! Low level access to MIPS MCU cores
+//!
+//! This crate includes Rust function to deal with low level aspects related to
+//! the MIPS MCU cores (e.g. the M4K core). Routines requiring special or
+//! privileged instructions are included in a binary library, thereby avoiding
+//! inline assembly.
 
 #![no_std]
 
-pub mod interrupt;
+pub mod core_timer;
 pub mod fmt;
+pub mod interrupt;
 
 /// Physical address
 #[derive(Clone, Copy, Debug, Default)]
@@ -12,7 +18,6 @@ pub struct PhysicalAddress {
 }
 
 impl PhysicalAddress {
-
     /// Create a PhysicalAddress by specifying its value directly
     pub const fn from_usize(addr: usize) -> Self {
         Self { addr }
