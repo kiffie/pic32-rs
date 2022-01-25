@@ -11,14 +11,14 @@ pic32mx2x4fxxxb = ["pic32-hal/pic32mx2x4fxxxb"]
 default = ["pic32mx2xxfxxxb"]
 
 [dependencies]
-mips-rt = "0.2.0"
+mips-rt = "0.3.0"
 alloc-pic32 = { git = "https://github.com/kiffie/alloc-pic32.git" }
 embedded-hal = "0.2.3"
-pic32-hal = { version = "0.5.0", features = ["usb-device"] }
+pic32-hal = { version = "0.6.1", features = ["usb-device"] }
 panic-halt = "0.2.0"
 usb-device = "0.2.5"
 usbd-serial = "0.1.0"
-pic32-config-sector = "0.1.0"
+pic32-config-sector = "0.1.2"
 
 [profile.release]
 opt-level = 2
