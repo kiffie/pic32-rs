@@ -1,9 +1,10 @@
 [package]
 name = "pic32-hal"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Stephan <kiffie@mailbox.org>"]
 edition = "2018"
 description = "Hardware Abstraction Layer (HAL) for PIC32 microcontrollers"
+documentation = "https://docs.rs/pic32-hal"
 repository = "https://github.com/kiffie/pic32-rs/tree/master/pic32-hal"
 keywords = ["no-std", "mips", "pic32", "hal"]
 license = "MIT OR Apache-2.0"
@@ -16,7 +17,7 @@ pic32mx2x4fxxxb = ["pic32mx2xx/pic32mx2x4fxxxb", "device-selected"]
 device-selected = []
 
 [dependencies]
-nb = "0.1.1"
+nb = "1.0.0"
 embedded-hal = { version = "0.2.3", features = ["unproven"] }
 mips-mcu = "0.2.0"
 mips-rt = "0.3.0"

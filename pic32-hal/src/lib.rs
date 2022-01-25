@@ -13,7 +13,6 @@
 //! This documentation has been generated with `--features pic32mx2xxfxxxb`.
 
 #![no_std]
-#![feature(llvm_asm)]
 
 #[cfg(not(feature = "device-selected"))]
 compile_error!("This crate requires one device feature to be enabled");
