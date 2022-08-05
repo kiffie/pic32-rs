@@ -17,6 +17,7 @@ This crate provides a thin low-level API on top of the register access API imple
 * SPI peripheral
 * interrupt controller
 * Peripheral Pin Select (PPS)
+* 10-bit analog-to-digital converter (ADC)
 
 Some of the modules implement the [embedded-hal](https://crates.io/crates/embedded-hal) API so that device drivers (e. g. for displays) using this API can access PIC32 peripherals.
 
