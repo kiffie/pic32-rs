@@ -42,6 +42,7 @@ pub mod i2c;
 pub mod coretimer;
 pub mod clock;
 pub mod dma;
+pub mod adc;
 
 #[cfg(any(
     feature = "pic32mx2xxfxxxb",
