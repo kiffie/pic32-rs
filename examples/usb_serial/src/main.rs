@@ -11,8 +11,8 @@
 #![no_main]
 #![feature(alloc_error_handler)]
 
-use alloc_pic32::Pic32Heap;
 use embedded_hal::digital::v2::*;
+use mips_mcu_alloc::MipsMcuHeap;
 use mips_rt::entry;
 use panic_halt as _;
 use pic32_hal::{gpio::GpioExt, pac, usb::UsbBus};
@@ -75,14 +75,12 @@ pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
     .build();
 
 #[global_allocator]
-static ALLOCATOR: Pic32Heap = Pic32Heap::empty();
+static ALLOCATOR: MipsMcuHeap = MipsMcuHeap::empty();
 
 #[entry]
 fn main() -> ! {
     // Initialize the allocator BEFORE you use it
-    let start = mips_rt::heap_start() as usize;
-    let size = 8192; // in bytes
-    unsafe { ALLOCATOR.init(start, size) }
+    ALLOCATOR.init();
 
     let p = pac::Peripherals::take().unwrap();
 
