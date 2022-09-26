@@ -1,0 +1,20 @@
+[package]
+name = "mips-mcu-alloc"
+description = "A heap allocator for MIPS based microcontrollers"
+version = "0.5.0"
+authors = ["Stephan <kiffie@mailbox.org>"]
+repository = "https://github.com/kiffie/pic32-rs/tree/master/mips-mcu-alloc"
+license = "MIT OR Apache-2.0"
+edition = "2021"
+keywords = ["no-std", "allocator", "mips", "PIC32"]
+categories = ["embedded", "hardware-support", "no-std"]
+readme = "README.md"
+
+[dependencies]
+mips-mcu = "0.2.0"
+mips-rt = "0.3.0"
+
+[dependencies.linked_list_allocator]
+default-features = false
+features = ["const_mut_refs"]
+version = "0.10.3"
