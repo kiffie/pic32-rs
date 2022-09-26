@@ -3,24 +3,6 @@
 version = 3
 
 [[package]]
-name = "alloc-pic32"
-version = "0.4.0"
-source = "git+https://github.com/kiffie/alloc-pic32.git#20d5a69bd597640832ecc7245d9a49ed8a28c472"
-dependencies = [
- "linked_list_allocator",
- "mips-mcu 0.1.0",
-]
-
-[[package]]
-name = "bare-metal"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5deb64efa5bd81e31fcd1938615a6d98c82eafcbcd787162b6f63b91d6bac5b3"
-dependencies = [
- "rustc_version",
-]
-
-[[package]]
 name = "bare-metal"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -28,9 +10,9 @@ checksum = "f8fe8f5a8a398345e52358e18ff07cc17a568fbca5c6f73873d3a62056309603"
 
 [[package]]
 name = "embedded-hal"
-version = "0.2.6"
+version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e36cfb62ff156596c892272f3015ef952fe1525e85261fa3a7f327bd6b384ab9"
+checksum = "35949884794ad573cf46071e41c9b60efb0cb311e3ca01f7af807af1debc66ff"
 dependencies = [
  "nb 0.1.3",
  "void",
@@ -58,18 +40,9 @@ dependencies = [
 
 [[package]]
 name = "linked_list_allocator"
-version = "0.8.11"
+version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "822add9edb1860698b79522510da17bef885171f75aa395cff099d770c609c24"
-
-[[package]]
-name = "mips-mcu"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38a48259532f7fa880d505a4a0ad9f57b77d1f4b2f88331625442b7c87a0cd64"
-dependencies = [
- "bare-metal 0.2.5",
-]
+checksum = "2e8da0e6283aace40e4e0395fe5ad7a147fac6ff47bda1f038b5044fb11683c2"
 
 [[package]]
 name = "mips-mcu"
@@ -77,7 +50,18 @@ version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0cb9dfcb19ab4530dec67e8f47b696a1480346382983a42db41248b8dc81e945"
 dependencies = [
- "bare-metal 1.0.0",
+ "bare-metal",
+]
+
+[[package]]
+name = "mips-mcu-alloc"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1eed3d885d57cd90acfc7b4c8c4a0be9b066ec5dcdaabb4fa12d19fabc581b9"
+dependencies = [
+ "linked_list_allocator",
+ "mips-mcu",
+ "mips-rt",
 ]
 
 [[package]]
@@ -86,7 +70,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e37979f5efb0e8ba8fa5f926d402264d0925ce2bee8e793d5975ef7b417d1858"
 dependencies = [
- "bare-metal 1.0.0",
+ "bare-metal",
  "mips-rt-macros",
 ]
 
@@ -130,13 +114,13 @@ checksum = "ef66fccf1a7354d6379530051fc3dc92902c62cf99429578cd680e059baf4b55"
 
 [[package]]
 name = "pic32-hal"
-version = "0.6.1"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1266b54cee988e517810744f03a6fbd7bd7e14c61fa68c149157d83979e275bb"
+checksum = "d925e7b84808d5d7958f3ca8f0b3ce07da3c9f14bffe5f10ba35c1eeb73e784b"
 dependencies = [
  "embedded-hal",
  "enumflags2",
- "mips-mcu 0.2.0",
+ "mips-mcu",
  "mips-rt",
  "nb 1.0.0",
  "pic32mx2xx",
@@ -145,86 +129,62 @@ dependencies = [
 
 [[package]]
 name = "pic32mx2xx"
-version = "0.4.2"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "40caa69670525379b6ee5107f7b79791a2503d371d4bf199c26bcfc6b5640f7f"
+checksum = "1dc71544e56fa5b7396065b610726d6729ec1b991ed0de140f2a41869ed7534c"
 dependencies = [
- "mips-mcu 0.2.0",
+ "mips-mcu",
  "mips-rt",
  "vcell",
 ]
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.36"
+version = "1.0.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7342d5883fbccae1cc37a2353b09c87c9b0f3afd73f5fb9bba687a1f733b029"
+checksum = "7bd7356a8122b6c4a24a82b278680c73357984ca2fc79a0f9fa6dea7dced7c58"
 dependencies = [
- "unicode-xid",
+ "unicode-ident",
 ]
 
 [[package]]
 name = "quote"
-version = "1.0.15"
+version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "864d3e96a899863136fc6e99f3d7cae289dafe43bf2c5ac19b70df7210c0a145"
+checksum = "bbe448f377a7d6961e30f5955f9b8d106c3f5e449d493ee1b125c1d43c2b5179"
 dependencies = [
  "proc-macro2",
 ]
-
-[[package]]
-name = "rustc_version"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
-dependencies = [
- "semver",
-]
-
-[[package]]
-name = "semver"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d7eb9ef2c18661902cc47e535f9bc51b78acd254da71d375c2f6720d9a40403"
-dependencies = [
- "semver-parser",
-]
-
-[[package]]
-name = "semver-parser"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 
 [[package]]
 name = "syn"
-version = "1.0.86"
+version = "1.0.100"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a65b3f4ffa0092e9887669db0eae07941f023991ab58ea44da8fe8e2d511c6b"
+checksum = "52205623b1b0f064a4e71182c3b18ae902267282930c6d5462c91b859668426e"
 dependencies = [
  "proc-macro2",
  "quote",
- "unicode-xid",
+ "unicode-ident",
 ]
 
 [[package]]
-name = "unicode-xid"
-version = "0.2.2"
+name = "unicode-ident"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ccb82d61f80a663efe1f787a51b16b5a51e3314d6ac365b08639f52387b33f3"
+checksum = "dcc811dc4066ac62f84f11307873c4850cb653bfa9b1719cee2bd2204a4bc5dd"
 
 [[package]]
 name = "usb-device"
-version = "0.2.8"
+version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6be90410d4772074ea49525e2e753b65920b94b57eee21a6ef7b6a6fe6296245"
+checksum = "1f6cc3adc849b5292b4075fc0d5fdcf2f24866e88e336dd27a8943090a520508"
 
 [[package]]
 name = "usb_serial"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
- "alloc-pic32",
  "embedded-hal",
+ "mips-mcu-alloc",
  "mips-rt",
  "panic-halt",
  "pic32-config-sector",

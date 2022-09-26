@@ -1,6 +1,6 @@
 [package]
 name = "usb_serial"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Stephan <kiffie@mailbox.org>"]
 license = "MIT OR Apache-2.0"
 edition = "2018"
@@ -12,9 +12,9 @@ default = ["pic32mx2xxfxxxb"]
 
 [dependencies]
 mips-rt = "0.3.0"
-alloc-pic32 = { git = "https://github.com/kiffie/alloc-pic32.git" }
+mips-mcu-alloc = "0.5.0"
 embedded-hal = "0.2.3"
-pic32-hal = { version = "0.6.1", features = ["usb-device"] }
+pic32-hal = { version = "0.7.0", features = ["usb-device"] }
 panic-halt = "0.2.0"
 usb-device = "0.2.5"
 usbd-serial = "0.1.0"
