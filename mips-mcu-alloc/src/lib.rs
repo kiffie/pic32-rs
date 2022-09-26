@@ -143,7 +143,8 @@ unsafe impl GlobalAlloc for MipsMcuHeap {
 fn stack_pointer() -> *mut u8 {
     let sp: *mut u8;
     unsafe {
-        asm!("move {0}, $29", out(reg) sp);
+        asm!(".set noat",
+             "move {0}, $29", out(reg) sp);
     }
     sp
 }

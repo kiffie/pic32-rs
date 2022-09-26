@@ -9,6 +9,7 @@ edition = "2021"
 keywords = ["no-std", "allocator", "mips", "PIC32"]
 categories = ["embedded", "hardware-support", "no-std"]
 readme = "README.md"
+include = ["README.md", "/src", "LICENSE"]
 
 [dependencies]
 mips-mcu = "0.2.0"
