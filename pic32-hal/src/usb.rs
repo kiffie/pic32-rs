@@ -560,7 +560,7 @@ impl usb_device::bus::UsbBus for UsbBus {
         if inner.usb.u1ir.read().urstif_detachif().bit() {
             inner.usb.u1addr.write(unsafe { |w| w.bits(0) });
             inner.usb.u1ir.write(|w| w.urstif_detachif().bit(true));
-            //return PollResult::Reset;
+            return PollResult::Reset;
         }
         if inner.usb.u1ir.read().stallif().bit() {
             inner.usb.u1ep0clr.write(|w| w.epstall().bit(true));
