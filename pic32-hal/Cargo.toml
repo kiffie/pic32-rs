@@ -1,6 +1,6 @@
 [package]
 name = "pic32-hal"
-version = "0.7.1"
+version = "0.8.0"
 authors = ["Stephan <kiffie@mailbox.org>"]
 edition = "2018"
 description = "Hardware Abstraction Layer (HAL) for PIC32 microcontrollers"
@@ -25,8 +25,8 @@ usb-device = { version = "0.2.5", optional = true }
 enumflags2 = "0.6.4"
 
 [dependencies.pic32mx2xx]
-version = "0.5.0"
+version = "0.6.0"
 features = ["rt"]
 
 [package.metadata.docs.rs]
-features = ["pic32mx2xxfxxxb"]
+features = ["pic32mx2xxfxxxb", "usb-device"]

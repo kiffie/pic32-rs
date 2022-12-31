@@ -5,10 +5,12 @@
 
 use crate::time::Hertz;
 use crate::time::U32Ext;
+use core::marker::PhantomData;
 
 #[cfg(any(
     feature = "pic32mx1xxfxxxb",
     feature = "pic32mx2xxfxxxb",
+    feature = "pic32mx2x4fxxxb",
     feature = "pic32mx4xxfxxxh"
 ))]
 pub mod refclock;
@@ -39,14 +41,45 @@ pub struct Osc {
     sysclock: Hertz,
 }
 
+pub struct Simple;
+
+pub struct WithRefclock;
+
+/// Clock module errors
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+pub enum Error {
+    /// Operation cannot performed in the current state of the clock module
+    InvalidState,
+
+    /// Value is out of range supported by the hardware
+    InvalidArgument,
+}
+
 #[cfg(feature = "pic32mx2x4fxxxb")]
 impl Osc {
-
-    /// Create a new Osc from a possibly constant sysclock value. The sysclock
+    /// Create a new `Osc` from a possibly constant sysclock value. The sysclock
     /// value should be set to the core clock resulting from the configuration
     /// words and, if a crystal oscillator is used, the crystal frequency.
     pub const fn new(cru: CRU, sysclock: Hertz) -> Osc {
         Osc { cru, sysclock }
+    }
+
+    /// Create a new `Osc` and `Refclock` from a possibly constant sysclock
+    /// value. The sysclock value should be set to the core clock resulting from
+    /// the configuration words and, if a crystal oscillator is used, the
+    /// crystal frequency.
+    pub const fn new_with_refclock(cru: CRU, sysclock: Hertz) -> (Osc, refclock::Refclock) {
+        (
+            Osc { cru, sysclock },
+            refclock::Refclock {
+                _private: PhantomData,
+            },
+        )
+    }
+
+    /// Get the sysclock
+    pub fn sysclock(&self) -> Hertz {
+        self.sysclock
     }
 
     /// Determine the peripheral clock frequency based on the sysclock value
@@ -56,15 +89,6 @@ impl Osc {
         let freq = self.sysclock.0 / (div as u32 + 1);
         freq.hz()
     }
-
-#[cfg(any(
-    feature = "pic32mx1xxfxxxb",
-    feature = "pic32mx2xxfxxxb",
-    feature = "pic32mx4xxfxxxh"
-))]
-    pub fn refclock(&self) -> refclock::Refclock {
-        refclock::Refclock { osc: &self.osc }
-    }
 }
 
 #[cfg(any(
@@ -73,12 +97,29 @@ impl Osc {
     feature = "pic32mx4xxfxxxh"
 ))]
 impl Osc {
-
-    /// Create a new Osc from a possibly constant sysclock value. The sysclock
+    /// Create a new `Osc` from a possibly constant sysclock value. The sysclock
     /// value should be set to the core clock resulting from the configuration
     /// words and, if a crystal oscillator is used, the crystal frequency.
     pub const fn new(osc: OSC, sysclock: Hertz) -> Osc {
         Osc { osc, sysclock }
+    }
+
+    /// Create a new `Osc` and `Refclock` from a possibly constant sysclock
+    /// value. The sysclock value should be set to the core clock resulting from
+    /// the configuration words and, if a crystal oscillator is used, the
+    /// crystal frequency.
+    pub const fn new_with_refclock(osc: OSC, sysclock: Hertz) -> (Osc, refclock::Refclock) {
+        (
+            Osc { osc, sysclock },
+            refclock::Refclock {
+                _private: PhantomData,
+            },
+        )
+    }
+
+    /// Get the sysclock
+    pub fn sysclock(&self) -> Hertz {
+        self.sysclock
     }
 
     /// Determine the peripheral clock frequency based on the sysclock value
@@ -87,9 +128,5 @@ impl Osc {
         let div = self.osc.osccon.read().pbdiv().bits();
         let freq = self.sysclock.0 >> div;
         freq.hz()
-    }
-
-    pub fn refclock(&self) -> refclock::Refclock {
-        refclock::Refclock { osc: &self.osc }
     }
 }
