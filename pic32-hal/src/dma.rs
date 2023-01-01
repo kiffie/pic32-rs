@@ -2,11 +2,12 @@
 
 use crate::int::InterruptSource;
 use crate::pac::{DMAC, DMAC0, DMAC1, DMAC2, DMAC3};
-use enumflags2::BitFlags;
+use enumflags2::{bitflags, BitFlags};
 use mips_mcu::PhysicalAddress;
 
 /// Interrupt flag or enable bits related to a specific DMA channel
-#[derive(BitFlags, Copy, Clone, Debug, PartialEq)]
+#[bitflags]
+#[derive(Copy, Clone, Debug, PartialEq)]
 #[repr(u8)]
 pub enum DmaIrq {
     /// Channel Source Done
