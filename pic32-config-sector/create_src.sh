@@ -12,6 +12,7 @@ build_module() {
 }
 
 URLBASE=https://raw.githubusercontent.com/kiffie/pic32-pac/master
+URLBASE_MX567=https://raw.githubusercontent.com/kiffie/pic32-pac/mx567
 
 build_module $URLBASE/pic32mx2xx/pic32mx1xxfxxxb/PIC32MX170F256B.PIC pic32mx1xx
 build_module $URLBASE/pic32mx2xx/pic32mx2xxfxxxb/PIC32MX270F256B.PIC pic32mx2xx
@@ -20,6 +21,8 @@ build_module $URLBASE/pic32mx2xx/pic32mx2x4fxxxb/PIC32MX274F256B.PIC pic32mx2x4
 
 build_module $URLBASE/pic32mx470/pic32mx37xfxxxl/PIC32MX370F512L.PIC pic32mx37x
 build_module $URLBASE/pic32mx470/pic32mx47xfxxxl/PIC32MX470F512L.PIC pic32mx47x
+
+build_module $URLBASE_MX567/pic32mx567/pic32mx695fxxxl/PIC32MX695F512L.PIC pic32mx567
 
 build_module file:$(pwd)/PIC32MZ2048EFM144.PIC pic32mzef
 

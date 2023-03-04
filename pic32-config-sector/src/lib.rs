@@ -49,5 +49,8 @@ pub mod pic32mx37x;
 /// Configuration sector struct and builder for PIC32MX430/450/470
 pub mod pic32mx47x;
 
+/// Configuration sector struct and builder for PIC32MX5xx/6xx/7xx
+pub mod pic32mx567;
+
 /// Configuration sector struct and builder for PIC32MZEF
 pub mod pic32mzef;

@@ -45,6 +45,7 @@ The following modules exist:
 | pic32mx2x4 | PIC32MX2x4 (XLP) | PIC32MX274F256B.PIC |
 | pic32mx37x | PIC32MX330/350/370 | PIC32MX370F512L.PIC |
 | pic32mx47x | PIC32MX430/450/470 | PIC32MX470F512L.PIC |
+| pic32mx567 | PIC32MX5xx/6xx/7xx | PIC32MX695F512L.PIC |
 | pic32mzef | PIC32MZEF | PIC32MZ2048EFM144.PIC |
 
 The const builder structs are machine generated from XML files distributed by
