@@ -1,0 +1,9 @@
+
+[target.mipsel-unknown-none]
+rustflags = ["-C", "link-arg=-T32MX695F512L_procdefs.ld"]
+
+[build]
+target = "mipsel-unknown-none"
+
+[unstable]
+build-std = ["core", "compiler_builtins", "alloc"]

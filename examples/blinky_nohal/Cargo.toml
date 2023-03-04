@@ -1,0 +1,24 @@
+[package]
+name = "blinky_nohal"
+version = "0.1.0"
+authors = ["Stephan <kiffie@mailbox.org>"]
+license = "MIT OR Apache-2.0"
+edition = "2021"
+
+[features]
+pic32mx1xxfxxxb = ["pic32mx2xx/pic32mx1xxfxxxb"]
+pic32mx2xxfxxxb = ["pic32mx2xx/pic32mx2xxfxxxb"]
+pic32mx6xx      = ["pic32mx567/pic32mx695fxxxl"]
+default = ["pic32mx6xx"]
+
+[dependencies]
+mips-rt = "0.3.0"
+mips-mcu = "0.2.0"
+pic32-config-sector = "0.2.0"
+pic32mx2xx = { version = "0.6.0", features = ["rt"], optional = true }
+pic32mx567 = { version = "0.1.0", features = ["rt"], optional = true }
+panic-halt = "0.2.0"
+
+[profile.release]
+opt-level = 2
+lto = true

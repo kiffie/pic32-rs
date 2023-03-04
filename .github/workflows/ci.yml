@@ -9,7 +9,7 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                example: [blinky, i2c_oled_display, usb_serial]
+                example: [blinky, blinky_nohal, i2c_oled_display, usb_serial]
         steps:
             - uses: actions/checkout@v2
             - uses: actions-rs/toolchain@v1
