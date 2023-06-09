@@ -1,8 +1,8 @@
 [package]
 name = "pic32-hal"
-version = "0.8.0"
+version = "0.9.0"
 authors = ["Stephan <kiffie@mailbox.org>"]
-edition = "2018"
+edition = "2021"
 description = "Hardware Abstraction Layer (HAL) for PIC32 microcontrollers"
 documentation = "https://docs.rs/pic32-hal"
 repository = "https://github.com/kiffie/pic32-rs/tree/master/pic32-hal"
@@ -19,14 +19,15 @@ device-selected = []
 [dependencies]
 nb = "1.0.0"
 embedded-hal = { version = "0.2.7", features = ["unproven"] }
-mips-mcu = "0.2.0"
+mips-mcu = "0.3.0"
 mips-rt = "0.3.0"
+critical-section = "1.0.0"
 usb-device = { version = "0.2.9", optional = true }
 enumflags2 = "0.7.5"
 
 [dependencies.pic32mx2xx]
-version = "0.6.0"
-features = ["rt"]
+version = "0.7.0"
+features = ["rt", "critical-section"]
 
 [package.metadata.docs.rs]
 features = ["pic32mx2xxfxxxb", "usb-device"]

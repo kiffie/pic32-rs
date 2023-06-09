@@ -3,11 +3,14 @@ name = "mips-mcu"
 description = "Low level access to MIPS MCU cores"
 categories = ["embedded", "hardware-support", "no-std"]
 keywords = ["mips", "register", "peripheral"]
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Stephan <kiffie@mailbox.org>"]
 repository = "https://github.com/kiffie/pic32-rs"
 license = "MIT OR Apache-2.0"
-edition = "2018"
+edition = "2021"
 
 [dependencies]
-bare-metal = "1.0.0"
+critical-section = { version = "1.0.0", optional = true }
+
+[features]
+critical-section-single-core = ["critical-section/restore-state-u32"]

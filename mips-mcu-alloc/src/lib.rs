@@ -47,8 +47,8 @@ use core::cell::RefCell;
 use core::ptr::{self, NonNull};
 
 use linked_list_allocator::Heap;
-use mips_mcu::interrupt::Mutex;
 use mips_rt::heap_start;
+use critical_section::{self, Mutex};
 
 /// Heap extension is performed stepwise. This constant defines the size of one extension step.
 const EXTEND_INCREMENT: usize = 1024;
@@ -71,10 +71,10 @@ impl MipsMcuHeap {
     /// Initialize heap with heap start location from linker and a defined initial size
     pub fn init(&self) {
         let bottom = heap_start() as *mut u8;
-        mips_mcu::interrupt::free(|cs| {
+        critical_section::with(|cs| {
             unsafe {
                 self.heap
-                    .borrow(*cs)
+                    .borrow(cs)
                     .borrow_mut()
                     .init(bottom, EXTEND_INCREMENT)
             };
@@ -83,22 +83,22 @@ impl MipsMcuHeap {
 
     /// Returns an estimate of the amount of bytes in use.
     pub fn used(&self) -> usize {
-        mips_mcu::interrupt::free(|cs| self.heap.borrow(*cs).borrow_mut().used())
+        critical_section::with(|cs| self.heap.borrow(cs).borrow_mut().used())
     }
 
     /// Returns an estimate of the amount of bytes available.
     pub fn free(&self) -> usize {
-        mips_mcu::interrupt::free(|cs| self.heap.borrow(*cs).borrow_mut().free())
+        critical_section::with(|cs| self.heap.borrow(cs).borrow_mut().free())
     }
 
     /// Returns the start (bottom) of the heap
     pub fn bottom(&self) -> *mut u8 {
-        mips_mcu::interrupt::free(|cs| self.heap.borrow(*cs).borrow_mut().bottom())
+        critical_section::with(|cs| self.heap.borrow(cs).borrow_mut().bottom())
     }
 
     /// Returns the end (top) of the heap
     pub fn top(&self) -> *mut u8 {
-        mips_mcu::interrupt::free(|cs| self.heap.borrow(*cs).borrow_mut().top())
+        critical_section::with(|cs| self.heap.borrow(cs).borrow_mut().top())
     }
 }
 
@@ -106,9 +106,9 @@ unsafe impl GlobalAlloc for MipsMcuHeap {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         // try to allocate and successively extend by EXTEND_INCREMENT until memory is exhausted
         loop {
-            if let Ok(p) = mips_mcu::interrupt::free(|cs| {
+            if let Ok(p) = critical_section::with(|cs| {
                 self.heap
-                    .borrow(*cs)
+                    .borrow(cs)
                     .borrow_mut()
                     .allocate_first_fit(layout)
             }) {
@@ -116,12 +116,12 @@ unsafe impl GlobalAlloc for MipsMcuHeap {
             } else {
                 // this must be a u8 pointer
                 let new_top: *mut u8 =
-                    mips_mcu::interrupt::free(|cs| self.heap.borrow(*cs).borrow_mut().top())
+                    critical_section::with(|cs| self.heap.borrow(cs).borrow_mut().top())
                         .add(EXTEND_INCREMENT);
                 // avoid collision with stack
                 if new_top < stack_pointer() {
-                    mips_mcu::interrupt::free(|cs| {
-                        self.heap.borrow(*cs).borrow_mut().extend(EXTEND_INCREMENT)
+                    critical_section::with(|cs| {
+                        self.heap.borrow(cs).borrow_mut().extend(EXTEND_INCREMENT)
                     });
                 } else {
                     break ptr::null_mut();
@@ -131,9 +131,9 @@ unsafe impl GlobalAlloc for MipsMcuHeap {
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        mips_mcu::interrupt::free(|cs| {
+        critical_section::with(|cs| {
             self.heap
-                .borrow(*cs)
+                .borrow(cs)
                 .borrow_mut()
                 .deallocate(NonNull::new_unchecked(ptr), layout)
         });
