@@ -10,7 +10,9 @@ pub fn enable_mv_irq() {
     extern "C" {
         fn mips_enable_mv_irq();
     }
-    unsafe { mips_enable_mv_irq(); }
+    unsafe {
+        mips_enable_mv_irq();
+    }
 }
 
 /// Disables all interrupts and return previous status

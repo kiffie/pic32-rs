@@ -46,9 +46,9 @@ use core::arch::asm;
 use core::cell::RefCell;
 use core::ptr::{self, NonNull};
 
+use critical_section::{self, Mutex};
 use linked_list_allocator::Heap;
 use mips_rt::heap_start;
-use critical_section::{self, Mutex};
 
 /// Heap extension is performed stepwise. This constant defines the size of one extension step.
 const EXTEND_INCREMENT: usize = 1024;
@@ -107,10 +107,7 @@ unsafe impl GlobalAlloc for MipsMcuHeap {
         // try to allocate and successively extend by EXTEND_INCREMENT until memory is exhausted
         loop {
             if let Ok(p) = critical_section::with(|cs| {
-                self.heap
-                    .borrow(cs)
-                    .borrow_mut()
-                    .allocate_first_fit(layout)
+                self.heap.borrow(cs).borrow_mut().allocate_first_fit(layout)
             }) {
                 break p.as_ptr();
             } else {

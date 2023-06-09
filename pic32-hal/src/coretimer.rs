@@ -7,9 +7,9 @@ use crate::hal::blocking::delay::{DelayMs, DelayUs};
 use crate::pac::INT; // interrupt controller
 use crate::time::Hertz;
 
+use critical_section::Mutex;
 pub use mips_mcu::core_timer::read_count;
 use mips_mcu::core_timer::{read_compare, write_compare};
-use critical_section::Mutex;
 
 use core::cell::Cell;
 
