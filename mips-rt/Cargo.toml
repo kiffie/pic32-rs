@@ -1,8 +1,8 @@
 [package]
 name = "mips-rt"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Stephan <kiffie@mailbox.org"]
-edition = "2018"
+edition = "2021"
 repository = "https://github.com/kiffie/pic32-rs"
 categories = ["embedded", "no-std"]
 description = "Minimal runtime for MIPS MCU cores"
@@ -10,6 +10,5 @@ keywords = ["mips", "pic32", "runtime", "startup"]
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-bare-metal = "1.0.0"
 mips-rt-macros = { path = "macros", version = "0.3.0" }
 

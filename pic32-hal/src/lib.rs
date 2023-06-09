@@ -32,17 +32,17 @@ pub use pic32mx4xxfxxxh as pac;
 
 use embedded_hal as hal;
 
-pub mod time;
-pub mod int;
-pub mod gpio;
-pub mod pps;
-pub mod uart;
-pub mod spi;
-pub mod i2c;
-pub mod coretimer;
-pub mod clock;
-pub mod dma;
 pub mod adc;
+pub mod clock;
+pub mod coretimer;
+pub mod dma;
+pub mod gpio;
+pub mod i2c;
+pub mod int;
+pub mod pps;
+pub mod spi;
+pub mod time;
+pub mod uart;
 
 #[cfg(any(
     feature = "pic32mx2xxfxxxb",

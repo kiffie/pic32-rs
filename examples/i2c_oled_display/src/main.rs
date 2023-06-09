@@ -4,13 +4,18 @@
 #![no_std]
 #![feature(panic_info_message)]
 
+use core::cell::RefCell;
 use core::panic::PanicInfo;
-
+use critical_section::{self, Mutex};
 use embedded_graphics::{
-    fonts::{Font12x16, Font6x12, Font6x8, Font8x16},
-    image::Image1BPP,
+    image::{Image, ImageRaw},
+    mono_font::{
+        ascii::{FONT_10X20, FONT_6X9, FONT_8X13},
+        MonoTextStyle,
+    },
+    pixelcolor::BinaryColor,
     prelude::*,
-    Drawing,
+    text::Text,
 };
 use embedded_hal::{
     blocking::delay::DelayMs,
@@ -24,19 +29,21 @@ use pic32_hal::{
     gpio::GpioExt,
     i2c::{Fscl, I2c},
     pac,
-    pac::UART1,
+    pac::UART2,
     pps::{MapPin, NoPin, PpsExt},
     pps_no_pin,
     time::U32Ext,
     uart::{Tx, Uart},
 };
-use ssd1306::{mode::GraphicsMode, Builder};
+use ssd1306::{prelude::*, I2CDisplayInterface, Ssd1306};
 use tinylog::{self, debug, error, info};
 
 #[cfg(feature = "pic32mx1xxfxxxb")]
 use pic32_config_sector::pic32mx1xx::*;
 #[cfg(feature = "pic32mx2x4fxxxb")]
 use pic32_config_sector::pic32mx2x4::*;
+#[cfg(feature = "pic32mx2xxfxxxb")]
+use pic32_config_sector::pic32mx2xx::*;
 
 const TL_LOGLEVEL: tinylog::Level = tinylog::Level::Debug;
 
@@ -58,6 +65,26 @@ pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
     .FSOSCEN(FSOSCEN::OFF)
     .FNOSC(FNOSC::FRCPLL)
     // DEVCFG0
+    .JTAGEN(JTAGEN::OFF)
+    .ICESEL(ICESEL::ICS_PGx1)
+    .build();
+
+// PIC32 configuration registers for PIC32MX1xx and PIC32MX2xx
+#[cfg(any(feature = "pic32mx1xxfxxxb", feature = "pic32mx2xxfxxxb"))]
+#[link_section = ".configsfrs"]
+#[used]
+pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
+    .FVBUSONIO(FVBUSONIO::OFF)
+    .FUSBIDIO(FUSBIDIO::OFF)
+    .IOL1WAY(IOL1WAY::OFF)
+    .PMDL1WAY(PMDL1WAY::OFF)
+    .FPLLIDIV(FPLLIDIV::DIV_2)
+    .FPLLMUL(FPLLMUL::MUL_20)
+    .FPLLODIV(FPLLODIV::DIV_2)
+    .FNOSC(FNOSC::FRCPLL)
+    .FSOSCEN(FSOSCEN::OFF)
+    .FPBDIV(FPBDIV::DIV_1)
+    .FWDTEN(FWDTEN::OFF)
     .JTAGEN(JTAGEN::OFF)
     .ICESEL(ICESEL::ICS_PGx1)
     .build();
@@ -91,16 +118,19 @@ pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
     .DEBUG(DEBUG::OFF)
     .build();
 
-static mut LOG_TX: Option<Tx<UART1>> = None;
+static LOG_TX2: Mutex<RefCell<Option<Tx<UART2>>>> = Mutex::new(RefCell::new(None));
 
 fn log_bwrite_all(buffer: &[u8]) {
-    unsafe {
-        if let Some(ref mut tx) = LOG_TX {
-            for b in buffer {
-                while match tx.write(*b) {
-                    Ok(()) => false,
-                    Err(_) => true,
-                } {}
+    let is_none = critical_section::with(|cs| LOG_TX2.borrow(cs).borrow_mut().is_none());
+    if is_none {
+        return;
+    }
+    for b in buffer {
+        loop {
+            if critical_section::with(|cs| LOG_TX2.borrow_ref_mut(cs).as_mut().unwrap().write(*b))
+                .is_ok()
+            {
+                break;
             }
         }
     }
@@ -110,13 +140,12 @@ fn log_bwrite_all(buffer: &[u8]) {
 fn main() -> ! {
     //configure IO ports for UART
     let p = pac::Peripherals::take().unwrap();
-    let porta = p.PORTA.split();
     let portb = p.PORTB.split();
     let vpins = p.PPS.split();
 
     // setup clock control object
     let sysclock = 40_000_000_u32.hz();
-    #[cfg(feature = "pic32mx1xxfxxxb")]
+    #[cfg(any(feature = "pic32mx1xxfxxxb", feature = "pic32mx2xxfxxxb"))]
     let clock = Osc::new(p.OSC, sysclock);
     #[cfg(feature = "pic32mx2x4fxxxb")]
     let clock = Osc::new(p.CRU, sysclock);
@@ -124,20 +153,22 @@ fn main() -> ! {
     let mut timer = Delay::new(sysclock);
 
     /* initialize clock control and uart */
-    let txd = porta
-        .ra0
+    let txd = portb
+        .rb0
         .into_push_pull_output()
-        .map_pin(vpins.outputs.u1tx);
-    let uart = Uart::uart1(p.UART1, &clock, 115200, pps_no_pin!(vpins.inputs.u1rx), txd);
+        .map_pin(vpins.outputs.u2tx);
+    let uart = Uart::uart2(p.UART2, &clock, 115200, pps_no_pin!(vpins.inputs.u2rx), txd);
     timer.delay_ms(10u32);
     let (tx, _) = uart.split();
-    unsafe { LOG_TX = Some(tx) };
+    critical_section::with(|cs| {
+        *LOG_TX2.borrow_ref_mut(cs) = Some(tx);
+    });
     tinylog::set_bwrite_all(log_bwrite_all);
     info!("I2C oled display example");
     debug!("sysclock = {} Hz", sysclock.0);
 
     /* LED */
-    let mut led = portb.rb0.into_push_pull_output();
+    let mut led = portb.rb5.into_push_pull_output();
 
     let mut state = false;
 
@@ -149,48 +180,49 @@ fn main() -> ! {
 
     info!("initializing display");
     let i2c = I2c::i2c1(p.I2C1, clock.pb_clock(), Fscl::F400KHZ);
-    let mut disp: GraphicsMode<_> = Builder::new().connect_i2c(i2c).into();
+    let interface = I2CDisplayInterface::new(i2c);
+    let mut disp = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
+        .into_buffered_graphics_mode();
     disp.init().unwrap();
-    disp.flush().unwrap();
 
-    disp.draw(
-        Font6x8::render_str("Hello World 6x8")
-            .translate(Coord::new(0, 0))
-            .into_iter(),
-    );
+    Text::new(
+        "Hello 10x20",
+        Point::new(0, 20),
+        MonoTextStyle::new(&FONT_10X20, BinaryColor::On),
+    )
+    .draw(&mut disp)
+    .unwrap();
 
-    disp.draw(
-        Font6x12::render_str("Hello World 6x12")
-            .translate(Coord::new(0, 8))
-            .into_iter(),
-    );
+    Text::new(
+        "Hello World 8x13",
+        Point::new(0, 33),
+        MonoTextStyle::new(&FONT_8X13, BinaryColor::On),
+    )
+    .draw(&mut disp)
+    .unwrap();
 
-    disp.draw(
-        Font8x16::render_str("Hello World 8x16")
-            .translate(Coord::new(0, 20))
-            .into_iter(),
-    );
-
-    disp.draw(
-        Font12x16::render_str("Hello 12x16")
-            .translate(Coord::new(0, 36))
-            .into_iter(),
-    );
+    Text::new(
+        "Hello World 6x9",
+        Point::new(0, 42),
+        MonoTextStyle::new(&FONT_6X9, BinaryColor::On),
+    )
+    .draw(&mut disp)
+    .unwrap();
 
     disp.flush().unwrap();
 
     timer.delay_ms(10000u32);
 
-    let bitmap = include_bytes!("./rust.raw");
+    let raw: ImageRaw<BinaryColor> = ImageRaw::new(include_bytes!("./rust.raw"), 64);
 
     info!("starting loop");
     let mut x = 0;
     let mut move_right = true;
 
     loop {
-        let im = Image1BPP::new(bitmap, 64, 64).translate(Coord::new(x, 0));
-        disp.clear();
-        disp.draw(im.into_iter());
+        let im = Image::new(&raw, Point::new(x, 0));
+        disp.clear(BinaryColor::Off).unwrap();
+        im.draw(&mut disp).unwrap();
         disp.flush().unwrap();
         state = !state;
         if move_right {
@@ -198,12 +230,14 @@ fn main() -> ! {
                 x += 1;
             } else {
                 debug!("left");
+                led.set_high().unwrap();
                 move_right = false;
             }
         } else if x > 0 {
             x -= 1;
         } else {
             debug!("right");
+            led.set_low().unwrap();
             move_right = true;
         }
     }

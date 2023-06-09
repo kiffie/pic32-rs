@@ -7,10 +7,9 @@ use crate::hal::blocking::delay::{DelayMs, DelayUs};
 use crate::pac::INT; // interrupt controller
 use crate::time::Hertz;
 
+use critical_section::Mutex;
 pub use mips_mcu::core_timer::read_count;
 use mips_mcu::core_timer::{read_compare, write_compare};
-use mips_mcu::interrupt;
-use mips_mcu::interrupt::Mutex;
 
 use core::cell::Cell;
 
@@ -101,8 +100,8 @@ static TIMER: Mutex<Cell<Option<Timer>>> = Mutex::new(Cell::new(Some(Timer {})))
 impl Timer {
     /// Get the `Timer` singleton. Panics if the singleton is not available.
     pub fn take() -> Self {
-        let timeropt = interrupt::free(|cs| {
-            let cell = TIMER.borrow(*cs);
+        let timeropt = critical_section::with(|cs| {
+            let cell = TIMER.borrow(cs);
             cell.take()
         });
         timeropt.unwrap()
@@ -110,8 +109,8 @@ impl Timer {
 
     /// Return the `Timer` singleton.
     pub fn free(self) {
-        interrupt::free(|cs| {
-            let cell = TIMER.borrow(*cs);
+        critical_section::with(|cs| {
+            let cell = TIMER.borrow(cs);
             cell.replace(Some(self));
         });
     }

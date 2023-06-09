@@ -9,13 +9,14 @@ edition = "2018"
 pic32mx1xxfxxxb = ["pic32-hal/pic32mx1xxfxxxb"]
 pic32mx2xxfxxxb = ["pic32-hal/pic32mx2xxfxxxb"]
 rx = []
-default = ["pic32mx1xxfxxxb"]
+default = ["pic32mx2xxfxxxb"]
 
 [dependencies]
+mips-mcu = { version = "0.3.0", features = ["critical-section-single-core"] }
 mips-rt = "0.3.0"
-embedded-hal = "0.2.3"
-pic32-hal = "0.6.1"
-pic32-config-sector = "0.1.2"
+embedded-hal = "0.2.7"
+pic32-hal = "0.9.0"
+pic32-config-sector = "0.2.0"
 [profile.release]
 opt-level = 2
 lto = true

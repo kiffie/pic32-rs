@@ -4,8 +4,8 @@ use core::fmt;
 use core::marker::PhantomData;
 
 use crate::clock::Osc;
-use crate::pps::{input, output, MappedPin, IsConnected};
 use crate::pac::{UART1, UART2};
+use crate::pps::{input, output, IsConnected, MappedPin};
 
 use embedded_hal::prelude::*;
 use nb::block;

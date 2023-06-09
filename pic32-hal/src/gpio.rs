@@ -259,10 +259,7 @@ macro_rules! port {
 }
 
 // configuration for general purpose (non-USB) devices
-#[cfg(any(
-    feature = "pic32mx1xxfxxxb",
-    feature = "pic32mx2xxfxxxb"
-))]
+#[cfg(any(feature = "pic32mx1xxfxxxb", feature = "pic32mx2xxfxxxb"))]
 port!(PORTA, porta, [
     RA0: (ra0, 0, Input<Analog>, true),
     RA1: (ra1, 1, Input<Analog>, true),

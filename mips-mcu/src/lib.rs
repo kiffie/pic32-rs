@@ -11,6 +11,9 @@ pub mod core_timer;
 pub mod fmt;
 pub mod interrupt;
 
+#[cfg(feature = "critical-section-single-core")]
+pub mod critical_section;
+
 /// Physical address
 #[derive(Clone, Copy, Debug, Default)]
 pub struct PhysicalAddress {
