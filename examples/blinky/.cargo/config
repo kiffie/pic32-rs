@@ -1,6 +1,6 @@
 
 [target.mipsel-unknown-none]
-rustflags = ["-C", "link-arg=-T32MX150F128B_procdefs.ld"]
+rustflags = ["-C", "link-arg=-T32MX270F256B_procdefs.ld"]
 
 [build]
 target = "mipsel-unknown-none"

@@ -11,10 +11,9 @@ ENTRY(_reset);
 EXTERN(_gen_exception)
 
 /* stack */
-PROVIDE(_stack = ORIGIN(kseg1_data_mem) + LENGTH(kseg1_data_mem));
+PROVIDE(_stack = ORIGIN(data_mem) + LENGTH(data_mem));
 
-
-/* # Pre-initialization function */
+/* Pre-initialization function */
 /* If the user overrides this using the `pre_init!` macro or by creating a `__pre_init` function,
    then the function this points to will be called before the RAM is initialized. */
 PROVIDE(__pre_init = DefaultPreInit);
@@ -22,17 +21,22 @@ PROVIDE(__pre_init = DefaultPreInit);
 /* # Sections */
 SECTIONS
 {
+  /* boot loader */
+  .bootloader : {
+    KEEP(*(.bootloader))
+  } > bootloader_mem
+
   /* ## PIC32MX configuration registers */
   .configsfrs : {
     KEEP(*(.configsfrs));
   } > configsfrs
 
-  /* Boot Sections */
+  /* Reset Sections */
   .reset :
   {
     KEEP(*(.reset))
     KEEP(*(.reset.startup))
-  } > kseg1_boot_mem
+  } > reset_mem
   /* .bev_excpt _BEV_EXCPT_ADDR :
   {
     KEEP(*(.bev_handler))
@@ -45,11 +49,10 @@ SECTIONS
   } > debug_exec_mem */
 
   /* Exception handlers */
-  .app_excpt :
+  .app_excpt _ebase_address + 0x180:
   {
-    . = _GEN_EXCPT_ADDR;
     KEEP(*(.gen_handler))
-  } > exception_mem = 0xffffffff
+  } > exception_mem
 
   .vector_0 _ebase_address + 0x200 + ((_vector_spacing << 5) * 0) :
   {
@@ -376,7 +379,7 @@ SECTIONS
   .text  :
   {
     *(.text .text.*);
-  } > kseg0_program_mem
+  } > program_mem
 
   /* ### .rodata */
   .rodata : ALIGN(4)
@@ -387,7 +390,7 @@ SECTIONS
        This is required by LLD to ensure the LMA of the following .data
        section will have the correct alignment. */
     . = ALIGN(4);
-  } > kseg0_program_mem
+  } > program_mem
 
   /* ## Sections in RAM */
   /* ### .data */
@@ -396,7 +399,7 @@ SECTIONS
     *(.data .data.*);
 
     . = ALIGN(4); /* 4-byte align the end (VMA) of this section */
-  } > kseg1_data_mem AT > kseg0_program_mem
+  } > data_mem AT > program_mem
 
   /* VMA of .data */
   __sdata = ADDR(.data);
@@ -411,7 +414,7 @@ SECTIONS
     *(.bss .bss.*);
 
     . = ALIGN(4); /* 4-byte align the end (VMA) of this section */
-  } > kseg1_data_mem
+  } > data_mem
 
   __sbss = ADDR(.bss);
   __ebss = ADDR(.bss) + SIZEOF(.bss);
