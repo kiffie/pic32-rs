@@ -24,3 +24,24 @@ jobs:
               working-directory: ./examples/${{ matrix.example }}
             - run: cargo clippy --no-deps
               working-directory: ./examples/${{ matrix.example }}
+
+    ci-libs:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                crate: [pic32-hal, mips-rt]
+                include:
+                  - crate: pic32-hal
+                    features: "pic32mx2xxfxxxb, usb-device"
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions-rs/toolchain@v1
+              with:
+                profile: minimal
+                toolchain: nightly
+                override: true
+                components: rust-src, clippy
+            - run: cargo check --features "${{ matrix.features }}"
+              working-directory: ./${{ matrix.crate }}
+            - run: cargo clippy --no-deps --features "${{ matrix.features }}"
+              working-directory: ./${{ matrix.crate }}
