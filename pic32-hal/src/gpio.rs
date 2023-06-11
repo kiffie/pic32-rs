@@ -84,7 +84,7 @@ macro_rules! port {
                     ) -> $PXi<Input<Floating>> {
                         unsafe {
                             $(
-                                $has_ansel; // dummy statement to satisfy macro processor
+                                _ = $has_ansel; // dummy statement to satisfy macro processor
                                 (*$PORTX::ptr()).anselclr.write(|w| w.bits(1 << $i));
                             )?
                             (*$PORTX::ptr()).trisset.write(|w| w.bits(1 << $i));
@@ -100,7 +100,7 @@ macro_rules! port {
                     ) -> $PXi<Input<PullDown>> {
                         unsafe {
                             $(
-                                $has_ansel; // dummy statement to satisfy macro processor
+                                _ = $has_ansel; // dummy statement to satisfy macro processor
                                 (*$PORTX::ptr()).anselclr.write(|w| w.bits(1 << $i));
                             )?
                             (*$PORTX::ptr()).trisset.write(|w| w.bits(1 << $i));
@@ -116,7 +116,7 @@ macro_rules! port {
                     ) -> $PXi<Input<PullUp>> {
                         unsafe {
                             $(
-                                $has_ansel; // dummy statement to satisfy macro processor
+                                _ = $has_ansel; // dummy statement to satisfy macro processor
                                 (*$PORTX::ptr()).anselclr.write(|w| w.bits(1 << $i));
                             )?
                             (*$PORTX::ptr()).trisset.write(|w| w.bits(1 << $i));
@@ -132,7 +132,7 @@ macro_rules! port {
                     ) -> $PXi<Output<OpenDrain>> {
                         unsafe {
                             $(
-                                $has_ansel; // dummy statement to satisfy macro processor
+                                _ = $has_ansel; // dummy statement to satisfy macro processor
                                 (*$PORTX::ptr()).anselclr.write(|w| w.bits(1 << $i));
                             )?
                             (*$PORTX::ptr()).trisclr.write(|w| w.bits(1 << $i));
@@ -149,7 +149,7 @@ macro_rules! port {
                     ) -> $PXi<Output<PushPull>> {
                         unsafe {
                             $(
-                                $has_ansel; // dummy statement to satisfy macro processor
+                                _ = $has_ansel; // dummy statement to satisfy macro processor
                                 (*$PORTX::ptr()).anselclr.write(|w| w.bits(1 << $i));
                             )?
                             (*$PORTX::ptr()).trisclr.write(|w| w.bits(1 << $i));
@@ -165,7 +165,7 @@ macro_rules! port {
                         pub fn into_analog_input(
                             self,
                         ) -> $PXi<Input<Analog>> {
-                            $has_ansel; // dummy statement to satisfy macro processor
+                            _ = $has_ansel; // dummy statement to satisfy macro processor
                             unsafe {
                                 (*$PORTX::ptr()).anselset.write(|w| w.bits(1 << $i));
                                 (*$PORTX::ptr()).trisset.write(|w| w.bits(1 << $i));

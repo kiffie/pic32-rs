@@ -31,6 +31,7 @@ pub struct NoPin;
 
 impl NoPin {
     // Create a new NoPin
+    #[allow(clippy::new_without_default)]
     pub fn new() -> NoPin {
         NoPin
     }

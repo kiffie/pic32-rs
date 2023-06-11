@@ -60,8 +60,8 @@ macro_rules! uart_impl {
                 }
                 Uart {
                     _uart: PhantomData,
-                    rx: rx,
-                    tx: tx,
+                    rx,
+                    tx,
                 }
             }
 

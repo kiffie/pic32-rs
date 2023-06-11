@@ -1,5 +1,8 @@
 //! Types for time units and frequency
+//! TODO: replace with fugit
 // Based on https://github.com/stm32-rs/stm32f4xx-hal/blob/master/src/time.rs
+
+#![allow(clippy::from_over_into)]
 
 /// Bits per second
 #[derive(PartialEq, PartialOrd, Clone, Copy)]

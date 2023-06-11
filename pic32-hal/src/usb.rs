@@ -537,7 +537,7 @@ impl usb_device::bus::UsbBus for UsbBus {
                 }
                 USB_PID_SETUP => {
                     // stop any previously submitted IN transactions
-                    if let Some(ref mut ecb_in) = inner.ecb[ep as usize][1] {
+                    if let Some(ref mut ecb_in) = inner.ecb[ep][1] {
                         ecb_in.cancel();
                     }
                     let ecb_out = inner.ecb[ep][0].as_mut().unwrap();
@@ -547,8 +547,8 @@ impl usb_device::bus::UsbBus for UsbBus {
                     ecb_out.complete_ctr += 1;
                     ecb_out.armed_ctr -= 1;
                     inner.pr_su |= 1 << ep;
-                    inner.ecb[ep as usize][0].as_mut().unwrap().data01 = true;
-                    inner.ecb[ep as usize][1].as_mut().unwrap().data01 = true;
+                    inner.ecb[ep][0].as_mut().unwrap().data01 = true;
+                    inner.ecb[ep][1].as_mut().unwrap().data01 = true;
                     // the USB modules automatically disables USB transactions
                     // after a SETUP transaction. Enable them again.
                     inner.usb.u1conclr.write(|w| w.pktdis_tokbusy().bit(true));
