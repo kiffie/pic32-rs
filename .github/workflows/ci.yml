@@ -29,7 +29,7 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                crate: [pic32-hal, mips-rt]
+                crate: [mips-rt, pic32-config-sector, pic32-hal]
                 include:
                     - crate: pic32-hal
                       features: "pic32mx2xxfxxxb, usb-device"
