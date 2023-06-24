@@ -1,5 +1,0 @@
-[build]
-target = "mipsel-unknown-none"
-
-[unstable]
-build-std = ["core", "compiler_builtins", "alloc"]
