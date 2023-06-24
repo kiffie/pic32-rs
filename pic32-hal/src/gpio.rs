@@ -46,8 +46,10 @@ macro_rules! port {
             use crate::hal::digital::v2::*;
             use crate::pac::$PORTX;
 
+            #[allow(unused_imports)]
+            use super::Analog;
             use super::{
-                Analog, Floating, GpioExt, Input, OpenDrain, Output,
+                Floating, GpioExt, Input, OpenDrain, Output,
                 PullDown, PullUp, PushPull,
             };
 
@@ -258,81 +260,4 @@ macro_rules! port {
     }
 }
 
-// configuration for general purpose (non-USB) devices
-#[cfg(any(feature = "pic32mx1xxfxxxb", feature = "pic32mx2xxfxxxb"))]
-port!(PORTA, porta, [
-    RA0: (ra0, 0, Input<Analog>, true),
-    RA1: (ra1, 1, Input<Analog>, true),
-    RA2: (ra2, 2, Input<Floating>),
-    RA3: (ra3, 3, Input<Floating>),
-    RA4: (ra4, 4, Input<Floating>),
-
-    RA7: (ra7, 7, Input<Floating>),
-    RA8: (ra8, 8, Input<Floating>),
-    RA9: (ra9, 9, Input<Floating>),
-    RA10: (ra10, 10, Input<Floating>),
-]);
-
-#[cfg(feature = "pic32mx1xxfxxxb")]
-port!(PORTB, portb, [
-    RB0: (rb0, 0, Input<Analog>, true),
-    RB1: (rb1, 1, Input<Analog>, true),
-    RB2: (rb2, 2, Input<Analog>, true),
-    RB3: (rb3, 3, Input<Analog>, true),
-    RB4: (rb4, 4, Input<Floating>),
-    RB5: (rb5, 5, Input<Floating>),
-    RB6: (rb6, 6, Input<Floating>),
-    RB7: (rb7, 7, Input<Floating>),
-    RB8: (rb8, 8, Input<Floating>),
-    RB9: (rb9, 9, Input<Floating>),
-    RB10: (rb10, 10, Input<Floating>),
-    RB11: (rb11, 11, Input<Floating>),
-    RB12: (rb12, 12, Input<Analog>, true),
-    RB13: (rb13, 13, Input<Analog>, true),
-    RB14: (rb14, 14, Input<Analog>, true),
-    RB15: (rb15, 15, Input<Analog>, true),
-]);
-
-#[cfg(feature = "pic32mx2xxfxxxb")]
-port!(PORTB, portb, [
-    RB0: (rb0, 0, Input<Analog>, true),
-    RB1: (rb1, 1, Input<Analog>, true),
-    RB2: (rb2, 2, Input<Analog>, true),
-    RB3: (rb3, 3, Input<Analog>, true),
-    RB4: (rb4, 4, Input<Floating>),
-    RB5: (rb5, 5, Input<Floating>),
-    RB7: (rb7, 7, Input<Floating>),
-    RB8: (rb8, 8, Input<Floating>),
-    RB9: (rb9, 9, Input<Floating>),
-    RB10: (rb10, 10, Input<Floating>),
-    RB11: (rb11, 11, Input<Floating>),
-    RB13: (rb13, 13, Input<Analog>, true),
-    RB14: (rb14, 14, Input<Analog>, true),
-    RB15: (rb15, 15, Input<Analog>, true),
-]);
-
-// PIC32MX2xx 28pin XLP USB devices
-#[cfg(feature = "pic32mx2x4fxxxb")]
-port!(PORTA, porta, [
-    RA0: (ra0, 0, Input<Analog>, true),
-    RA1: (ra1, 1, Input<Analog>, true),
-    RA2: (ra2, 2, Input<Floating>),
-    RA3: (ra3, 3, Input<Floating>),
-    RA4: (ra4, 4, Input<Floating>),
-]);
-
-#[cfg(feature = "pic32mx2x4fxxxb")]
-port!(PORTB, portb, [
-    RB0: (rb0, 0, Input<Analog>, true),
-    RB1: (rb1, 1, Input<Analog>, true),
-    RB2: (rb2, 2, Input<Analog>, true),
-    RB3: (rb3, 3, Input<Analog>, true),
-    RB4: (rb4, 4, Input<Floating>),
-    RB5: (rb5, 5, Input<Floating>),
-    RB7: (rb7, 7, Input<Floating>),
-    RB8: (rb8, 8, Input<Floating>),
-    RB9: (rb9, 9, Input<Floating>),
-    RB13: (rb13, 13, Input<Analog>, true),
-    RB14: (rb14, 14, Input<Analog>, true),
-    RB15: (rb15, 15, Input<Analog>, true),
-]);
+include!("gpio_tables.rs");
