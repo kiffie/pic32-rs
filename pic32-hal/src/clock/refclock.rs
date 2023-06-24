@@ -5,7 +5,9 @@ use core::marker::PhantomData;
 #[cfg(any(
     feature = "pic32mx1xxfxxxb",
     feature = "pic32mx2xxfxxxb",
-    feature = "pic32mx4xxfxxxh"
+    feature = "pic32mx4xxfxxxh",
+    feature = "pic32mx37x",
+    feature = "pic32mx47x",
 ))]
 use crate::pac::{osc::RegisterBlock, OSC};
 
@@ -37,7 +39,9 @@ pub struct Refclock {
 #[cfg(any(
     feature = "pic32mx1xxfxxxb",
     feature = "pic32mx2xxfxxxb",
-    feature = "pic32mx4xxfxxxh"
+    feature = "pic32mx4xxfxxxh",
+    feature = "pic32mx37x",
+    feature = "pic32mx47x",
 ))]
 macro_rules! regs {
     () => {

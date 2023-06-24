@@ -1,0 +1,20 @@
+#!/usr/bin/sh
+# check and clippy for all reasonable feature combinations
+
+cargo_check() {
+    local features=$1
+    echo "cargo check --features $features"
+    cargo check --features $features || exit
+    cargo clippy --features $features || exit
+    echo
+}
+
+
+cargo_check pic32mx1xxfxxxb
+cargo_check pic32mx2xxfxxxb
+cargo_check pic32mx2xxfxxxb,usb-device
+cargo_check pic32mx2x4fxxxb
+cargo_check pic32mx2x4fxxxb,usb-device
+cargo_check pic32mx37x
+cargo_check pic32mx47x
+cargo_check pic32mx47x,usb-device
