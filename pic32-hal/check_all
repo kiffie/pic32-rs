@@ -5,6 +5,7 @@ cargo_check() {
     local features=$1
     echo "cargo check --features $features"
     cargo check --features $features || exit
+    echo "cargo clippy --features $features"
     cargo clippy --features $features || exit
     echo
 }
