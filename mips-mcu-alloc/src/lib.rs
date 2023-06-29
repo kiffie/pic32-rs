@@ -6,7 +6,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```ignore
 //! #![feature(global_allocator)]
 //! #![feature(alloc_error_handler)]
 //!
@@ -18,8 +18,6 @@
 //!
 //! #[global_allocator]
 //! static ALLOCATOR: MipsMcuHeap = MipsMcuHeap::empty();
-//!
-//! entry!(main);
 //!
 //! #[entry]
 //! fn main() -> ! {
@@ -50,6 +48,9 @@ use critical_section::{self, Mutex};
 use linked_list_allocator::Heap;
 use mips_rt::heap_start;
 
+#[cfg(feature = "log")]
+use log::{debug, trace};
+
 /// Heap extension is performed stepwise. This constant defines the size of one extension step.
 const EXTEND_INCREMENT: usize = 1024;
 
@@ -71,6 +72,8 @@ impl MipsMcuHeap {
     /// Initialize heap with heap start location from linker and a defined initial size
     pub fn init(&self) {
         let bottom = heap_start() as *mut u8;
+        #[cfg(feature = "log")]
+        debug!("heap init, bottom = {bottom:?}, size = {EXTEND_INCREMENT}");
         critical_section::with(|cs| {
             unsafe {
                 self.heap
@@ -109,6 +112,8 @@ unsafe impl GlobalAlloc for MipsMcuHeap {
             if let Ok(p) = critical_section::with(|cs| {
                 self.heap.borrow(cs).borrow_mut().allocate_first_fit(layout)
             }) {
+                #[cfg(feature = "log")]
+                trace!("alloc at {:?}, {:?}, stack_pointer = {:?}", p.as_ptr(), layout, stack_pointer());
                 break p.as_ptr();
             } else {
                 // this must be a u8 pointer
@@ -120,6 +125,8 @@ unsafe impl GlobalAlloc for MipsMcuHeap {
                     critical_section::with(|cs| {
                         self.heap.borrow(cs).borrow_mut().extend(EXTEND_INCREMENT)
                     });
+                    #[cfg(feature = "log")]
+                    debug!("extended heap, top = {:?}, stack_pointer = {:?}", self.top(), stack_pointer());
                 } else {
                     break ptr::null_mut();
                 }
@@ -128,6 +135,8 @@ unsafe impl GlobalAlloc for MipsMcuHeap {
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        #[cfg(feature = "log")]
+        trace!("dealloc at {ptr:?}, {layout:?}");
         critical_section::with(|cs| {
             self.heap
                 .borrow(cs)

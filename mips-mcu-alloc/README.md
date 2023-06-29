@@ -9,6 +9,8 @@ The heap is placed at a location determined by the linker and automatically exte
 to fullfil allocation requests. Automatic heap extension fails if the heap would collide
 with the stack.
 
+Memory allocation and heap extension can be traced via logging by activating the `log` feature.
+
 Example:
 
 ```rust
