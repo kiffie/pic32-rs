@@ -1,88 +1,50 @@
-/*********************************************************************
+/*
+ * General exception wrapper
+ * Saves all registers on the stack for easy error reporting
  *
- *                  General Exception
+ * signature of the general exception handler:
+ *    pub extern "C" fn _general_exception_handler(cp0_cause: u32, cp0_status: u32);
  *
- *********************************************************************
- * Filename:        general-exception.S
- *
- * Processor:       PIC32
- *
- * Compiler:        chipKIT
- 
- * Company:         Microchip Technology Inc.
- *
- * Software License Agreement
- *
- * Copyright (c) 2014, Microchip Technology Inc. and its subsidiaries ("Microchip")
- * All rights reserved.
- * 
- * This software is developed by Microchip Technology Inc. and its
- * subsidiaries ("Microchip").
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1.      Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *
- * 2.      Redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution.
- *
- * 3.      Microchip's name may not be used to endorse or promote products
- * derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY MICROCHIP "AS IS" AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL
- * MICROCHIP BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING BUT NOT LIMITED TO
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWSOEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- ********************************************************************/
- 
+ */
+
 #include <regdef.h>
 #include <cp0defs.h>
 
-  ###################
-  # Default general exception handler
-  ###################
-
-  .extern _general_exception_handler
-
-  .section .text.general_exception, "ax"
-  .set noreorder
-  .set noat
-  .set nomips16
-  .globl _general_exception_context
-  .ent _general_exception_context
+.extern _general_exception_handler
+.section .text.general_exception, "ax"
+.set noreorder
+.set noat
+.set nomips16
+.globl _general_exception_context
+.ent _general_exception_context
 
 _general_exception_context:
 
   # Save off the non-callee saved registers that may get mucked with
    addiu sp, sp, -88
-   sw $1,  4(sp)
-   sw v0,  8(sp)
-   sw v1, 12(sp)
-   sw a0, 16(sp)
-   sw a1, 20(sp)
-   sw a2, 24(sp)
-   sw a3, 28(sp)
-   sw t0, 32(sp)
-   sw t1, 36(sp)
-   sw t2, 40(sp)
-   sw t3, 44(sp)
-   sw t4, 48(sp)
-   sw t5, 52(sp)
-   sw t6, 56(sp)
-   sw t7, 60(sp)
-   sw t8, 64(sp)
-   sw t9, 68(sp)
-   sw ra, 72(sp)
+   sw $1,  4(sp)     // 1
+   sw v0,  8(sp)     // 2
+   sw v1, 12(sp)     // 3
+   sw a0, 16(sp)     // 4
+   sw a1, 20(sp)     // 5
+   sw a2, 24(sp)     // 6
+   sw a3, 28(sp)     // 7
+   sw t0, 32(sp)     // 8
+   sw t1, 36(sp)     // 9
+   sw t2, 40(sp)     // 10
+   sw t3, 44(sp)     // 11
+   sw t4, 48(sp)     // 12
+   sw t5, 52(sp)     // 13
+   sw t6, 56(sp)     // 14
+   sw t7, 60(sp)     // 15
+                     // 16-23 s0-s7, callee saved
+   sw t8, 64(sp)     // 24
+   sw t9, 68(sp)     // 25
+                     // 26-27 kernel use
+                     // 28 Global pointer (GP)
+                     // 29 Stack pointer (SP)
+                     // 30 Frame Pointer (FP) or s8 (callee saved)
+   sw ra, 72(sp)     // 31
    mflo t0
    sw t0, 76(sp)
    mfhi t0

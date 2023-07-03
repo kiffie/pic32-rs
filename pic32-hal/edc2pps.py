@@ -18,13 +18,13 @@ from io import BytesIO
 from pathlib import Path
 
 BASE_URL = 'https://raw.githubusercontent.com/kiffie/pic32-pac/master'
-BASE_DIR = f'file:{Path.cwd()}/../..'
+# BASE_DIR = f'file:{Path.cwd()}/../..'
 MCU_VARIANTS = {
     'pic32mx1xxfxxxb': BASE_URL + '/pic32mx2xx/pic32mx1xxfxxxb/PIC32MX170F256B.PIC',
     'pic32mx2xxfxxxb': BASE_URL + '/pic32mx2xx/pic32mx2xxfxxxb/PIC32MX270F256B.PIC',
     'pic32mx2x4fxxxb': BASE_URL + '/pic32mx2xx/pic32mx2x4fxxxb/PIC32MX274F256B.PIC',
-    'pic32mx37x':      BASE_DIR + '/pic32-pac/pic32mx470/pic32mx37xfxxxl/PIC32MX370F512L.PIC',
-    'pic32mx47x':      BASE_DIR + '/pic32-pac/pic32mx470/pic32mx47xfxxxl/PIC32MX470F512L.PIC'
+    'pic32mx37x':      BASE_URL + '/pic32mx470/pic32mx37xfxxxl/PIC32MX370F512L.PIC',
+    'pic32mx47x':      BASE_URL + '/pic32mx470/pic32mx47xfxxxl/PIC32MX470F512L.PIC'
 }
 
 
