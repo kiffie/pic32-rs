@@ -1,6 +1,8 @@
 #!/usr/bin/sh
 # check and clippy for all reasonable feature combinations
 
+export RUSTFLAGS="$RUSTFLAGS -Dwarnings"
+
 cargo_check() {
     local features=$1
     echo "cargo check --features $features"
