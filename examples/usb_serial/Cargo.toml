@@ -12,15 +12,16 @@ default = ["pic32mx2xxfxxxb"]
 
 [dependencies]
 mips-mcu = { version = "0.3.0", features = ["critical-section-single-core"] }
-mips-rt = "0.3.0"
-mips-mcu-alloc = "0.6.0"
-embedded-hal = "0.2.3"
-pic32-hal = { version = "0.9.0", features = ["usb-device"] }
+mips-rt = "0.3.2"
+mips-mcu-alloc = "0.6.1"
+embedded-hal = "0.2.7"
+pic32-hal = { version = "0.10.0", features = ["usb-device"] }
 panic-halt = "0.2.0"
-usb-device = "0.2.5"
-usbd-serial = "0.1.0"
-pic32-config-sector = "0.2.0"
+usb-device = "0.2.9"
+usbd-serial = "0.1.1"
+pic32-config-sector = "0.3.0"
 
 [profile.release]
 opt-level = 2
 lto = true
+debug = true
