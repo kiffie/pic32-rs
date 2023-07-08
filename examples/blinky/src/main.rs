@@ -9,10 +9,10 @@
 #![no_main]
 #![no_std]
 
-use core::{fmt::Write, panic::PanicInfo};
-
+use core::fmt::Write;
 use embedded_hal::{blocking::delay::DelayMs, digital::v2::*, serial::Read};
 use mips_rt::{self, entry};
+use panic_halt as _;
 use pic32_config_sector::pic32mx2xx::*;
 use pic32_hal::{
     clock::Osc,
@@ -48,8 +48,6 @@ pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
 fn main() -> ! {
     let p = pac::Peripherals::take().unwrap();
 
-    //pps.rpb0r.write(|w| unsafe { w.rpb0r().bits(0b0010) }); // U2TX on RPB0
-
     // setup clock control object
     let sysclock = 40_000_000_u32.hz();
     let clock = Osc::new(p.OSC, sysclock);
@@ -77,20 +75,11 @@ fn main() -> ! {
     let mut on = true;
     loop {
         writeln!(tx, "LED status: {}", on).unwrap();
-        if on {
-            led.set_high().unwrap();
-        } else {
-            led.set_low().unwrap();
-        }
+        led.set_state(on.into()).unwrap();
         on = !on;
         if let Ok(byte) = rx.read() {
             writeln!(tx, "read char: '{}'", byte as char).unwrap();
         }
         timer.delay_ms(1000u32);
     }
-}
-
-#[panic_handler]
-fn panic(_panic_info: &PanicInfo<'_>) -> ! {
-    loop {}
 }

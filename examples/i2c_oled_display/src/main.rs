@@ -2,11 +2,8 @@
 
 #![no_main]
 #![no_std]
-#![feature(panic_info_message)]
 
-use core::cell::RefCell;
-use core::panic::PanicInfo;
-use critical_section::{self, Mutex};
+use core::fmt::Write;
 use embedded_graphics::{
     image::{Image, ImageRaw},
     mono_font::{
@@ -20,23 +17,21 @@ use embedded_graphics::{
 use embedded_hal::{
     blocking::delay::DelayMs,
     digital::v2::{OutputPin, ToggleableOutputPin},
-    serial::Write,
 };
 use mips_rt::{self, entry};
+use panic_halt as _;
 use pic32_hal::{
     clock::Osc,
     coretimer::Delay,
     gpio::GpioExt,
     i2c::{Fscl, I2c},
     pac,
-    pac::UART2,
     pps::{MapPin, NoPin, PpsExt},
     pps_no_pin,
     time::U32Ext,
-    uart::{Tx, Uart},
+    uart::Uart,
 };
 use ssd1306::{prelude::*, I2CDisplayInterface, Ssd1306};
-use tinylog::{self, debug, error, info};
 
 #[cfg(feature = "pic32mx1xxfxxxb")]
 use pic32_config_sector::pic32mx1xx::*;
@@ -44,8 +39,6 @@ use pic32_config_sector::pic32mx1xx::*;
 use pic32_config_sector::pic32mx2x4::*;
 #[cfg(feature = "pic32mx2xxfxxxb")]
 use pic32_config_sector::pic32mx2xx::*;
-
-const TL_LOGLEVEL: tinylog::Level = tinylog::Level::Debug;
 
 // PIC32 configuration registers for PIC32MX150
 #[cfg(feature = "pic32mx1xxfxxxb")]
@@ -118,24 +111,6 @@ pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
     .DEBUG(DEBUG::OFF)
     .build();
 
-static LOG_TX2: Mutex<RefCell<Option<Tx<UART2>>>> = Mutex::new(RefCell::new(None));
-
-fn log_bwrite_all(buffer: &[u8]) {
-    let is_none = critical_section::with(|cs| LOG_TX2.borrow(cs).borrow_mut().is_none());
-    if is_none {
-        return;
-    }
-    for b in buffer {
-        loop {
-            if critical_section::with(|cs| LOG_TX2.borrow_ref_mut(cs).as_mut().unwrap().write(*b))
-                .is_ok()
-            {
-                break;
-            }
-        }
-    }
-}
-
 #[entry]
 fn main() -> ! {
     //configure IO ports for UART
@@ -159,13 +134,8 @@ fn main() -> ! {
         .map_pin(vpins.outputs.u2tx);
     let uart = Uart::uart2(p.UART2, &clock, 115200, pps_no_pin!(vpins.inputs.u2rx), txd);
     timer.delay_ms(10u32);
-    let (tx, _) = uart.split();
-    critical_section::with(|cs| {
-        *LOG_TX2.borrow_ref_mut(cs) = Some(tx);
-    });
-    tinylog::set_bwrite_all(log_bwrite_all);
-    info!("I2C oled display example");
-    debug!("sysclock = {} Hz", sysclock.0);
+    let (mut tx, _) = uart.split();
+    writeln!(tx, "I2C oled display example").unwrap();
 
     /* LED */
     let mut led = portb.rb5.into_push_pull_output();
@@ -178,7 +148,7 @@ fn main() -> ! {
         timer.delay_ms(100);
     }
 
-    info!("initializing display");
+    writeln!(tx, "initializing display").unwrap();
     let i2c = I2c::i2c1(p.I2C1, clock.pb_clock(), Fscl::F400KHZ);
     let interface = I2CDisplayInterface::new(i2c);
     let mut disp = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
@@ -215,7 +185,7 @@ fn main() -> ! {
 
     let raw: ImageRaw<BinaryColor> = ImageRaw::new(include_bytes!("./rust.raw"), 64);
 
-    info!("starting loop");
+    writeln!(tx, "starting loop").unwrap();
     let mut x = 0;
     let mut move_right = true;
 
@@ -229,27 +199,16 @@ fn main() -> ! {
             if x < 64 {
                 x += 1;
             } else {
-                debug!("left");
+                writeln!(tx, "left").unwrap();
                 led.set_high().unwrap();
                 move_right = false;
             }
         } else if x > 0 {
             x -= 1;
         } else {
-            debug!("right");
+            writeln!(tx, "right").unwrap();
             led.set_low().unwrap();
             move_right = true;
         }
     }
-}
-
-#[panic_handler]
-fn panic(panic_info: &PanicInfo<'_>) -> ! {
-    if let Some(s) = panic_info.message() {
-        error!("Panic: {:?}", s);
-    } else {
-        error!("Panic");
-    }
-    error!("entering endless loop.");
-    loop {}
 }

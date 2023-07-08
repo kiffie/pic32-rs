@@ -55,9 +55,9 @@ dependencies = [
 
 [[package]]
 name = "mips-mcu-alloc"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70b64f77b28ceae4862a132ef77411bda6ef3c8f9e0e19a15338219681ee08ed"
+checksum = "8d7fe7bfe28ddedea20ed71329ac6492cee700278b8f4c78c1638f2a54ff0bbf"
 dependencies = [
  "critical-section",
  "linked_list_allocator",
@@ -67,9 +67,9 @@ dependencies = [
 
 [[package]]
 name = "mips-rt"
-version = "0.3.1"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d5524ac83440e7e7d18012dc92c48ccb0447e4f2d0adbe0a8be72cc58e33a49"
+checksum = "02d5422c1066894ce6c029bed692dfafc297d91e4056e1df8c85bb6b01b0f332"
 dependencies = [
  "mips-rt-macros",
 ]
@@ -108,15 +108,15 @@ checksum = "de96540e0ebde571dc55c73d60ef407c653844e6f9a1e2fdbd40c07b9252d812"
 
 [[package]]
 name = "pic32-config-sector"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad21a2aff96011e7f7e917a013a9eb246e73d5dae1fe0d94ea1d7e452fa88498"
+checksum = "c5dfd36f1915570f83a10b3fda6f8c4aab461078281b99fc3ca9585cebd91420"
 
 [[package]]
 name = "pic32-hal"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f6393dd973e257ad9652c2aa8402de1ad71ce4fadd52579ea83e229db94748b"
+checksum = "66035d2e0335987b58576c23e586444b5e83d30a9c74fee70818dad6efcc89ac"
 dependencies = [
  "critical-section",
  "embedded-hal",

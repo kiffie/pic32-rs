@@ -1,6 +1,6 @@
 [package]
 name = "i2c_oled_display"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Stephan <kiffie@mailbox.org>"]
 license = "MIT OR Apache-2.0"
 edition = "2018"
@@ -13,14 +13,14 @@ default = ["pic32mx2xxfxxxb"]
 
 [dependencies]
 mips-mcu = { version = "0.3.0", features = ["critical-section-single-core"] }
-mips-rt = "0.3.0"
+mips-rt = "0.3.2"
+panic-halt = "0.2.0"
 embedded-hal = "0.2.7"
-critical-section = "1.0.0"
-tinylog = { git = "https://github.com/kiffie/pic32-rs.git" }
-pic32-hal = "0.9.0"
+critical-section = "1.1.1"
+pic32-hal = "0.10.0"
 ssd1306 = "0.8.0"
 embedded-graphics = "0.8.0"
-pic32-config-sector = "0.2.0"
+pic32-config-sector = "0.3.0"
 
 [profile.release]
 opt-level = 2
