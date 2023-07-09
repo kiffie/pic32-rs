@@ -48,3 +48,16 @@ pub unsafe fn restore(previous_status: IrqSave) {
     }
     mips_restore_irq(previous_status)
 }
+
+/// Wait for interrupts
+///
+/// Use the MIPS `wait` instruction to wait for interrupts and to put the
+/// processor in a power saving mode.
+pub fn wait() {
+    extern "C" {
+        fn mips_wait();
+    }
+    unsafe {
+        mips_wait();
+    }
+}

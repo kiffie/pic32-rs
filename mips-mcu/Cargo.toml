@@ -2,8 +2,8 @@
 name = "mips-mcu"
 description = "Low level access to MIPS MCU cores"
 categories = ["embedded", "hardware-support", "no-std"]
-keywords = ["mips", "register", "peripheral"]
-version = "0.3.0"
+keywords = ["mips", "pic32", "register", "peripheral"]
+version = "0.3.1"
 authors = ["Stephan <kiffie@mailbox.org>"]
 repository = "https://github.com/kiffie/pic32-rs"
 license = "MIT OR Apache-2.0"

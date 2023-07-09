@@ -63,3 +63,14 @@ mips_restore_irq:
         nop
 .end mips_restore_irq
 
+# wait for interrupts
+#
+# void mips_wait(void)
+#
+.global mips_wait
+.ent mips_wait
+mips_wait:
+        wait
+        jr      ra
+        nop
+.end mips_wait
