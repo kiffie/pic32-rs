@@ -93,8 +93,8 @@ An alternative to ```xc32-bin2hex``` is ```pic32-bin2hex```, which is part of th
 
 To link the final application image, three linker script files are used
 
-* a main file containing the memory map of the used device (needs to be adapted
-to the Flash memory size and the RAM size
-* a file `pic32_common.ld` included by the main file
+* a file `memory.x` containing the memory map of the used device (needs to be adapted
+to the Flash memory size and the SRAM size).
 * a file `device.x` contained in the peripheral access crate that provides
-symbolic names for the interrupt vectors; also included by the main file
+symbolic names for the interrupt vectors
+* a main linker script `link.x`, which is part of the `mips-rt` crate. This main linker scripts sources the contents of `memory.x` and `device.x`.
