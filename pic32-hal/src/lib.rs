@@ -55,6 +55,8 @@ pub mod pps;
 pub mod spi;
 pub mod time;
 pub mod uart;
+pub mod timer;
+pub mod oc;
 
 #[cfg(any(
     feature = "pic32mx2xxfxxxb",
