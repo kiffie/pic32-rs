@@ -8,12 +8,13 @@
 # The "Quoted section flags are deprecated" warning from pic32-gcc can be
 # ignored.
 CC=pic32-gcc
+AR=pic32-ar
 
 LIB = libmips-rt
 
 CFLAGS = -Wall -mips32r2 -msoft-float -Os -Iinclude
 
-OBJECTS = crt0.o isr_context.o exception_table.o general-exception.o
+OBJECTS = crt0.o isr_context.o exception_table.o exception_context.o
 
 DEPS    = $(patsubst %.o, %.d, $(notdir $(OBJECTS)))
 

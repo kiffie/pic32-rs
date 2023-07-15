@@ -1,7 +1,7 @@
 /*
- * wrapper for exception handlers that saves registers on the stack
+ * wrapper for interrupt handlers that saves registers on the stack
  *
- * address of exception handler to be called must be in register k0
+ * address of interrupt handler to be called must be in register k0
  *
  */
 

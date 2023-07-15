@@ -12,7 +12,9 @@ INCLUDE memory.x
 /* The entry point is the reset handler */
 ENTRY(_reset);
 
-EXTERN(_gen_exception)
+/* default handlers for general exception and NMI */
+PROVIDE(_general_exception_handler = _default_isr_fn);
+PROVIDE(_nmi_handler = _default_isr_fn);
 
 /* stack */
 PROVIDE(_stack = ORIGIN(data_mem) + LENGTH(data_mem));
