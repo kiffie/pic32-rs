@@ -13,31 +13,6 @@ use syn::{
     ItemStatic, ReturnType, Stmt, Type, Visibility,
 };
 
-/// Attribute to declare the entry point of the program
-///
-/// The specified function will be called by the reset handler *after* RAM has been initialized.
-///
-/// The type of the specified function must be `[unsafe] fn() -> !` (never ending function)
-///
-/// # Properties
-///
-/// The entry point will be called by the reset handler. The program can't reference to the entry
-/// point, much less invoke it.
-///
-/// # Examples
-///
-/// - Simple entry point
-///
-/// ``` no_run
-/// # #![no_main]
-/// # use mips_rt_macros::entry;
-/// #[entry]
-/// fn main() -> ! {
-///     loop {
-///         /* .. */
-///     }
-/// }
-/// ```
 #[proc_macro_attribute]
 pub fn entry(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut f = parse_macro_input!(input as ItemFn);
@@ -187,43 +162,9 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
             .into();
         }
 
-        let (statics, stmts) = match extract_static_muts(f.block.stmts) {
-            Err(e) => return e.to_compile_error().into(),
-            Ok(x) => x,
-        };
-
         f.sig.ident = Ident::new(&format!("__mips_rt_{}", f.sig.ident), Span::call_site());
-        f.sig.inputs.extend(statics.iter().map(|statik| {
-            let ident = &statik.ident;
-            let ty = &statik.ty;
-            let attrs = &statik.attrs;
-            syn::parse::<FnArg>(
-                quote!(#[allow(non_snake_case)] #(#attrs)* #ident: &mut #ty).into(),
-            )
-            .unwrap()
-        }));
-        f.block.stmts = stmts;
-
         let tramp_ident = Ident::new(&format!("{}_trampoline", f.sig.ident), Span::call_site());
         let ident = &f.sig.ident;
-
-        let resource_args = statics
-            .iter()
-            .map(|statik| {
-                let (ref cfgs, ref attrs) = extract_cfgs(statik.attrs.clone());
-                let ident = &statik.ident;
-                let ty = &statik.ty;
-                let expr = &statik.expr;
-                quote! {
-                    #(#cfgs)*
-                    {
-                        #(#attrs)*
-                        static mut #ident: #ty = #expr;
-                        &mut #ident
-                    }
-                }
-            })
-            .collect::<Vec<_>>();
 
         let (ref cfgs, ref attrs) = extract_cfgs(f.attrs.clone());
 
@@ -233,17 +174,13 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
             #[doc(hidden)]
             #[export_name = #export_name]
             pub unsafe extern "C" fn #tramp_ident(cp0_cause: u32, cp0_status: u32) {
-                #ident(
-                    cp0_cause, cp0_status,
-                    #(#resource_args),*
-                )
+                #ident(cp0_cause, cp0_status)
             }
 
             #f
         ).into()
 }
 
-/// Attribute to declare an Interrupt Service Routine (ISR)
 #[proc_macro_attribute]
 pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut f: ItemFn = syn::parse(input).expect("`#[interrupt]` must be applied to a function");
@@ -351,7 +288,6 @@ pub fn interrupt(args: TokenStream, input: TokenStream) -> TokenStream {
     .into()
 }
 
-/// Attribute to declare a `pre_init` hook function
 #[proc_macro_attribute]
 pub fn pre_init(args: TokenStream, input: TokenStream) -> TokenStream {
     let f = parse_macro_input!(input as ItemFn);
