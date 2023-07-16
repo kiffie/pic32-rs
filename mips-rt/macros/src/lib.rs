@@ -153,32 +153,33 @@ pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
             },
         };
 
-        if !valid_signature {
-            return parse::Error::new(
-                fspan,
-                "`#[exception]`exception handlers must have signature `unsafe fn(u32, u32) [-> !]`",
-            )
-            .to_compile_error()
-            .into();
+    if !valid_signature {
+        return parse::Error::new(
+            fspan,
+            "`#[exception]`exception handlers must have signature `unsafe fn(u32, u32) [-> !]`",
+        )
+        .to_compile_error()
+        .into();
+    }
+
+    f.sig.ident = Ident::new(&format!("__mips_rt_{}", f.sig.ident), Span::call_site());
+    let tramp_ident = Ident::new(&format!("{}_trampoline", f.sig.ident), Span::call_site());
+    let ident = &f.sig.ident;
+
+    let (ref cfgs, ref attrs) = extract_cfgs(f.attrs.clone());
+
+    quote!(
+        #(#cfgs)*
+        #(#attrs)*
+        #[doc(hidden)]
+        #[export_name = #export_name]
+        pub unsafe extern "C" fn #tramp_ident(cp0_cause: u32, cp0_status: u32) {
+            #ident(cp0_cause, cp0_status)
         }
 
-        f.sig.ident = Ident::new(&format!("__mips_rt_{}", f.sig.ident), Span::call_site());
-        let tramp_ident = Ident::new(&format!("{}_trampoline", f.sig.ident), Span::call_site());
-        let ident = &f.sig.ident;
-
-        let (ref cfgs, ref attrs) = extract_cfgs(f.attrs.clone());
-
-        quote!(
-            #(#cfgs)*
-            #(#attrs)*
-            #[doc(hidden)]
-            #[export_name = #export_name]
-            pub unsafe extern "C" fn #tramp_ident(cp0_cause: u32, cp0_status: u32) {
-                #ident(cp0_cause, cp0_status)
-            }
-
-            #f
-        ).into()
+        #f
+    )
+    .into()
 }
 
 #[proc_macro_attribute]
