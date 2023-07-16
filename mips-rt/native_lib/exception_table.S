@@ -16,6 +16,12 @@ _default_isr_fn:
         nop
 .end _default_isr_fn
 
+.weak _general_exception_handler
+_general_exception_handler = _default_isr_fn
+
+.weak _nmi_handler
+_nmi_handler = _default_isr_fn
+
 # General Exception
 .section .gen_handler, "ax"
 .ent _gen_exception
