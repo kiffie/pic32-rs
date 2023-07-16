@@ -3,7 +3,7 @@
 
 #![no_std]
 
-pub use mips_rt_macros::{entry, interrupt, pre_init};
+pub use mips_rt_macros::{entry, exception, interrupt, pre_init};
 
 #[doc(hidden)]
 #[no_mangle]

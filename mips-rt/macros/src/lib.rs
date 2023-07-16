@@ -1,7 +1,7 @@
 //! Internal implementation details of `mips-rt`.
 //!
 //! Do not use this crate directly.
-//! Almost identical to [`cortex_m_rt_macros`](https://github.com/rust-embedded/cortex-m-rt/)
+//! Almost identical to `cortex_m_rt_macros`
 
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -44,7 +44,6 @@ pub fn entry(args: TokenStream, input: TokenStream) -> TokenStream {
 
     // check the function signature
     let valid_signature = f.sig.constness.is_none()
-        && f.sig.asyncness.is_none()
         && f.vis == Visibility::Inherited
         && f.sig.abi.is_none()
         && f.sig.inputs.is_empty()
@@ -53,10 +52,7 @@ pub fn entry(args: TokenStream, input: TokenStream) -> TokenStream {
         && f.sig.variadic.is_none()
         && match f.sig.output {
             ReturnType::Default => false,
-            ReturnType::Type(_, ref ty) => match **ty {
-                Type::Never(_) => true,
-                _ => false,
-            },
+            ReturnType::Type(_, ref ty) => matches!(**ty, Type::Never(_)),
         };
 
     if !valid_signature {
@@ -136,6 +132,115 @@ pub fn entry(args: TokenStream, input: TokenStream) -> TokenStream {
         #f
     )
     .into()
+}
+
+#[proc_macro_attribute]
+pub fn exception(args: TokenStream, input: TokenStream) -> TokenStream {
+    let mut f = parse_macro_input!(input as ItemFn);
+
+    if !args.is_empty() {
+        return parse::Error::new(Span::call_site(), "This attribute accepts no arguments")
+            .to_compile_error()
+            .into();
+    }
+
+    if let Err(error) = check_attr_whitelist(&f.attrs, WhiteListCaller::Exception) {
+        return error;
+    }
+
+    let fspan = f.span();
+    let ident = f.sig.ident.clone();
+
+    let ident_s = ident.to_string();
+    let export_name = match &*ident_s {
+        "general_exception" => "_general_exception_handler",
+        "nmi" => "_nmi_handler",
+        _ => {
+            return parse::Error::new(ident.span(), "This is not a valid exception name")
+                .to_compile_error()
+                .into();
+        }
+    };
+
+    let valid_signature = f.sig.constness.is_none()
+        && f.vis == Visibility::Inherited
+        && f.sig.abi.is_none()
+        && f.sig.inputs.len() == 2
+        && f.sig.generics.params.is_empty()
+        && f.sig.generics.where_clause.is_none()
+        && f.sig.variadic.is_none()
+        && match f.sig.output {
+            ReturnType::Default => true,
+            ReturnType::Type(_, ref ty) => match **ty {
+                Type::Tuple(ref tuple) => tuple.elems.is_empty(),
+                Type::Never(..) => true,
+                _ => false,
+            },
+        };
+
+        if !valid_signature {
+            return parse::Error::new(
+                fspan,
+                "`#[exception]`exception handlers must have signature `unsafe fn(u32, u32) [-> !]`",
+            )
+            .to_compile_error()
+            .into();
+        }
+
+        let (statics, stmts) = match extract_static_muts(f.block.stmts) {
+            Err(e) => return e.to_compile_error().into(),
+            Ok(x) => x,
+        };
+
+        f.sig.ident = Ident::new(&format!("__mips_rt_{}", f.sig.ident), Span::call_site());
+        f.sig.inputs.extend(statics.iter().map(|statik| {
+            let ident = &statik.ident;
+            let ty = &statik.ty;
+            let attrs = &statik.attrs;
+            syn::parse::<FnArg>(
+                quote!(#[allow(non_snake_case)] #(#attrs)* #ident: &mut #ty).into(),
+            )
+            .unwrap()
+        }));
+        f.block.stmts = stmts;
+
+        let tramp_ident = Ident::new(&format!("{}_trampoline", f.sig.ident), Span::call_site());
+        let ident = &f.sig.ident;
+
+        let resource_args = statics
+            .iter()
+            .map(|statik| {
+                let (ref cfgs, ref attrs) = extract_cfgs(statik.attrs.clone());
+                let ident = &statik.ident;
+                let ty = &statik.ty;
+                let expr = &statik.expr;
+                quote! {
+                    #(#cfgs)*
+                    {
+                        #(#attrs)*
+                        static mut #ident: #ty = #expr;
+                        &mut #ident
+                    }
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let (ref cfgs, ref attrs) = extract_cfgs(f.attrs.clone());
+
+        quote!(
+            #(#cfgs)*
+            #(#attrs)*
+            #[doc(hidden)]
+            #[export_name = #export_name]
+            pub unsafe extern "C" fn #tramp_ident(cp0_cause: u32, cp0_status: u32) {
+                #ident(
+                    cp0_cause, cp0_status,
+                    #(#resource_args),*
+                )
+            }
+
+            #f
+        ).into()
 }
 
 /// Attribute to declare an Interrupt Service Routine (ISR)
@@ -310,10 +415,10 @@ fn extract_static_muts(
     let mut seen = HashSet::new();
     let mut statics = vec![];
     let mut stmts = vec![];
-    while let Some(stmt) = istmts.next() {
+    for stmt in istmts.by_ref() {
         match stmt {
-            Stmt::Item(Item::Static(var)) => {
-                if var.mutability.is_some() {
+            Stmt::Item(Item::Static(var)) => match var.mutability {
+                syn::StaticMutability::Mut(_) => {
                     if seen.contains(&var.ident) {
                         return Err(parse::Error::new(
                             var.ident.span(),
@@ -323,10 +428,9 @@ fn extract_static_muts(
 
                     seen.insert(var.ident.clone());
                     statics.push(var);
-                } else {
-                    stmts.push(Stmt::Item(Item::Static(var)));
                 }
-            }
+                _ => stmts.push(Stmt::Item(Item::Static(var))),
+            },
             _ => {
                 stmts.push(stmt);
                 break;
@@ -356,7 +460,7 @@ fn extract_cfgs(attrs: Vec<Attribute>) -> (Vec<Attribute>, Vec<Attribute>) {
 
 enum WhiteListCaller {
     Entry,
-//    Exception,
+    Exception,
     Interrupt,
     PreInit,
 }
@@ -371,20 +475,21 @@ fn check_attr_whitelist(attrs: &[Attribute], caller: WhiteListCaller) -> Result<
         "deny",
         "forbid",
         "cold",
+        "naked",
     ];
 
     'o: for attr in attrs {
         for val in whitelist {
-            if eq(&attr, &val) {
+            if eq(attr, val) {
                 continue 'o;
             }
         }
 
         let err_str = match caller {
             WhiteListCaller::Entry => "this attribute is not allowed on a mips-rt entry point",
-//             WhiteListCaller::Exception => {
-//                 "this attribute is not allowed on an exception handler controlled by mips-rt"
-//             }
+            WhiteListCaller::Exception => {
+                 "this attribute is not allowed on an exception handler controlled by mips-rt"
+            }
             WhiteListCaller::Interrupt => {
                 "this attribute is not allowed on an interrupt handler controlled by mips-rt"
             }
@@ -393,7 +498,7 @@ fn check_attr_whitelist(attrs: &[Attribute], caller: WhiteListCaller) -> Result<
             }
         };
 
-        return Err(parse::Error::new(attr.span(), &err_str)
+        return Err(parse::Error::new(attr.span(), err_str)
             .to_compile_error()
             .into());
     }
@@ -403,5 +508,5 @@ fn check_attr_whitelist(attrs: &[Attribute], caller: WhiteListCaller) -> Result<
 
 /// Returns `true` if `attr.path` matches `name`
 fn eq(attr: &Attribute, name: &str) -> bool {
-    attr.style == AttrStyle::Outer && attr.path.is_ident(name)
+    attr.style == AttrStyle::Outer && attr.path().is_ident(name)
 }
