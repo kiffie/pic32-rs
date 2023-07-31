@@ -12,8 +12,6 @@ INCLUDE memory.x
 /* The entry point is the reset handler */
 ENTRY(_reset);
 
-EXTERN(_gen_exception)
-
 /* stack */
 PROVIDE(_stack = ORIGIN(data_mem) + LENGTH(data_mem));
 

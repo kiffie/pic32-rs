@@ -1,8 +1,10 @@
 /*
- * General exception wrapper
- * Saves all registers on the stack for easy error reporting
+ * Wrapper for exception handlers that saves registers on the stack
  *
- * signature of the general exception handler:
+ * Address of exception handler to be called must be in register k0
+ * This wrapper is not for interrupt exceptions.
+ *
+ * signature of the exception handler called by this wrapper:
  *    pub extern "C" fn _general_exception_handler(cp0_cause: u32, cp0_status: u32);
  *
  */
@@ -10,15 +12,14 @@
 #include <regdef.h>
 #include <cp0defs.h>
 
-.extern _general_exception_handler
-.section .text.general_exception, "ax"
+.section .text.exception_context, "ax"
 .set noreorder
 .set noat
 .set nomips16
-.globl _general_exception_context
-.ent _general_exception_context
+.globl _exception_context
+.ent _exception_context
 
-_general_exception_context:
+_exception_context:
 
   # Save off the non-callee saved registers that may get mucked with
    addiu sp, sp, -88
@@ -50,24 +51,11 @@ _general_exception_context:
    mfhi t0
    sw t0, 80(sp)
 
-#if defined(__PIC__)
-   lw      t9,%call16(_general_exception_handler)(gp)
-   nop
-   # Pass Cause and Status to the handler function
-   mfc0 a0, _CP0_CAUSE
-   mfc0 a1, _CP0_STATUS
-   jalr    t9
-   nop
-#else
-   la      k0,_general_exception_handler
-   nop
-   
    # Pass Cause and Status to the handler function
    mfc0 a0, _CP0_CAUSE
    mfc0 a1, _CP0_STATUS
    jalr    k0
    nop
-#endif
 
    lw t0, 80(sp)
    mthi t0
@@ -97,11 +85,4 @@ _general_exception_context:
    ehb
    eret
 
-  .end _general_exception_context
-
-.weak _general_exception_handler
-.ent _general_exception_handler
-_general_exception_handler:
-        jr      ra
-        nop
-.end _general_exception_handler
+  .end _exception_context

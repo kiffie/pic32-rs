@@ -1,8 +1,8 @@
 [package]
 name = "mips-rt-macros"
-version = "0.3.0"
+version = "0.3.4"
 authors = ["Stephan <kiffie@mailbox.org"]
-edition = "2018"
+edition = "2021"
 repository = "https://github.com/kiffie/pic32-rs"
 categories = ["embedded", "no-std"]
 description = "Attributes re-exported in `mips-rt`"
@@ -18,4 +18,4 @@ proc-macro2 = "1.0"
 
 [dependencies.syn]
 features = ["extra-traits", "full"]
-version = "1.0"
+version = "2.0"

@@ -52,87 +52,45 @@
 /* This file contains 32-bit assembly code */
        .set nomips16
 
-        ##################################################################
-        # Entry point of the entire application
-        ##################################################################
+##################################################################
+# Entry point of the entire application
+##################################################################
         .section .reset, "ax"
         .align 2
         .set noreorder
         .ent _reset
 
-############################
-# Begin ISA switching code #
-############################
-
-#if defined (__mips_micromips)
-        .set micromips
-#endif
-
-#if (defined(__PIC32_HAS_MICROMIPS)) && (defined(__PIC32_HAS_MIPS32R2))
 _reset:
-        .word 0x10000003     /* MIPS32:    branch forward 0x10 bytes from here  */
+
+/* This produces the intended code but confuses the disassembler function of rust-objdump
+ * So, leave it deactivated for now.
+ */
+#if (defined(__PIC32_HAS_MICROMIPS)) && (defined(__PIC32_HAS_MIPS32R2))
+        .word 0x10000004     /* MIPS32:    branch forward 0x14 bytes from here  */
                              /* MicroMIPS: ADDI32 $0, $0, 0x0007 (nop)          */
                              /* DO NOT change the relative branch               */
-
         .word 0x00000000     /* NOP */
 __reset_micromips_isa:
         .set    micromips
-        jal     _startup
+        la      k0, __reset_mips32_isa
+        jr      k0
         nop
-
-        .align 2
-        /* Device not in proper ISA mode */
-        .set nomicromips
-__reset_switch_isa:
-        jal _startup
-        nop
-
-#else
-
-_reset:
-        la      t0,_startup
-        jalr    t0
-        nop
-
+        .set    nomicromips
+__reset_mips32_isa:
 #endif  /* __PIC32_HAS_MICROMIPS */
 
-        .align 2
-        .end _reset
-        .globl _reset
-        .size _reset, .-_reset
-
-        .section .reset.startup, "ax"
-        .align 2
-        .set noreorder
-
-#if defined (__mips_micromips)
-        .set micromips
-#else
-        .set nomicromips
-#endif
-
-############################
-# End ISA switching code   #
-############################
-
-
-        ##################################################################
-        # Startup code
-        ##################################################################
-        .align 2
-        .set noreorder
-        .ent _startup
-_startup:
         ##################################################################
         # If entered because of an NMI, jump to the NMI handler.
         ##################################################################
         mfc0    k0,_CP0_STATUS
-        ext     k0,k0,19,1              # Extract NMI bit
-        beqz    k0,_no_nmi
+        ext     k1,k0,19,1              # Extract NMI bit
+        beqz    k1,_no_nmi
         nop
-#        la      k0,_nmi_handler
-#        jr      k0
-#        nop
+        ins     k0,zero,22,1            # clear the BEV bit
+        mtc0    k0,_CP0_STATUS
+        la      k0, _nmi_handler
+        j       _exception_context
+        nop
 _no_nmi:
 
         ##################################################################
@@ -333,7 +291,10 @@ _data_cond:
 _main_el:
         b       _main_el
         nop
-        .end _startup
+        .align 2
+        .end _reset
+        .globl _reset
+
 
         ##################################################################
         # Boot Exception Vector Handler
