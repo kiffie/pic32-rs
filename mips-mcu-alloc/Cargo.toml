@@ -1,7 +1,7 @@
 [package]
 name = "mips-mcu-alloc"
 description = "A heap allocator for MIPS based microcontrollers"
-version = "0.6.1"
+version = "0.6.2"
 authors = ["Stephan <kiffie@mailbox.org>"]
 repository = "https://github.com/kiffie/pic32-rs/tree/master/mips-mcu-alloc"
 license = "MIT OR Apache-2.0"

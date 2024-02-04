@@ -58,8 +58,14 @@ pub struct MipsMcuHeap {
     heap: Mutex<RefCell<Heap>>,
 }
 
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum Error {
+    InsufficientHeadroom,
+}
+
 impl MipsMcuHeap {
-    /// Crate a new UNINITIALIZED heap allocator
+    /// Create a new UNINITIALIZED heap allocator.
     ///
     /// You must initialize this heap using the
     /// [`init`](struct.CortexMHeap.html#method.init) method before using the allocator.
@@ -69,7 +75,7 @@ impl MipsMcuHeap {
         }
     }
 
-    /// Initialize heap with heap start location from linker and a defined initial size
+    /// Initialize heap with heap start location from linker and a defined initial size.
     pub fn init(&self) {
         let bottom = heap_start() as *mut u8;
         #[cfg(feature = "log")]
@@ -89,19 +95,62 @@ impl MipsMcuHeap {
         critical_section::with(|cs| self.heap.borrow(cs).borrow_mut().used())
     }
 
-    /// Returns an estimate of the amount of bytes available.
+    /// Returns the amount of bytes currently available.
+    ///
+    /// This method does not consider possible heap extensions
     pub fn free(&self) -> usize {
         critical_section::with(|cs| self.heap.borrow(cs).borrow_mut().free())
     }
 
-    /// Returns the start (bottom) of the heap
+    /// Returns the start (bottom) of the heap.
     pub fn bottom(&self) -> *mut u8 {
         critical_section::with(|cs| self.heap.borrow(cs).borrow_mut().bottom())
     }
 
-    /// Returns the end (top) of the heap
+    /// Returns the end (top) of the heap.
     pub fn top(&self) -> *mut u8 {
         critical_section::with(|cs| self.heap.borrow(cs).borrow_mut().top())
+    }
+
+    /// Returns the current distance to the bottom of the stack.
+    ///
+    /// This is an estimate amount of memory that could be added to the heap by
+    /// automatic extension. An estimate of the total available free heap memory
+    /// is the sum of `free()` and `headroom()`.
+    pub fn headroom(&self) -> usize {
+        let sp = stack_pointer() as usize;
+        let top = self.top() as usize;
+        if sp >= top {
+            sp - top
+        } else {
+            0
+        }
+    }
+
+    /// Try to extend the stack so that it has at least an amount of
+    /// `free_bytes` available.
+    ///
+    /// Fails if there is not enough headroom. Does nothing if there are already
+    /// enough free bytes.
+    ///
+    /// # Safety
+    ///
+    /// This method is considered unsafe because it increases the likelihood of
+    /// heap/stack collisions.
+    pub unsafe fn reserve(&self, free_bytes: usize) -> Result<(), Error> {
+        if free_bytes <= self.free() {
+            return Ok(());
+        }
+        let additional_bytes = free_bytes - self.free();
+        critical_section::with(|cs| {
+            let mut heap = self.heap.borrow_ref_mut(cs);
+            let new_top: *mut u8 = heap.top().add(additional_bytes);
+            if new_top >= stack_pointer() {
+                return Err(Error::InsufficientHeadroom);
+            }
+            heap.extend(additional_bytes);
+            Ok(())
+        })
     }
 }
 
