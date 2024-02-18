@@ -103,6 +103,7 @@ macro_rules! spi {
                             .mode16().bit(frame_format.mode16())
                             .ckp().bit(true)
                             .stxisel().bits(0b11) // IRQ when buffer not full
+                            .srxisel().bits(0b01) // IRQ when buffer is not empty
                             .msten().bit(true)
                             .on().bit(true)
                         });
