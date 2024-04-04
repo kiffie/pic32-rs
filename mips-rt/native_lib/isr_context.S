@@ -12,7 +12,7 @@
 .set noreorder
 .set noat
 .set nomips16
-.globl _isr_context
+.weak _isr_context
 .ent _isr_context
 
 _isr_context:
