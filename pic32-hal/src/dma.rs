@@ -41,27 +41,44 @@ pub enum XferMode {
 /// This trait defines operations that can be carried out by a DMAChannel
 pub trait Ops {
     /// Set source address and size of source block in bytes
-    fn set_source(&self, addr: PhysicalAddress, size: usize);
+    fn set_source(&mut self, addr: PhysicalAddress, size: usize);
 
     /// Set destination address and size of destination block in bytes
-    fn set_dest(&self, addr: PhysicalAddress, size: usize);
+    fn set_dest(&mut self, addr: PhysicalAddress, size: usize);
 
     /// Set cell size, i.e. number of bytes transferred per triggering event
-    fn set_cell_size(&self, size: usize);
+    fn set_cell_size(&mut self, size: usize);
 
     /// Set start event source for triggering a cell transfer
-    fn set_start_event(&self, event: Option<InterruptSource>);
+    fn set_start_event(&mut self, event: Option<InterruptSource>);
 
     /// Set event for aborting a transfer
-    fn set_abort_event(&self, event: Option<InterruptSource>);
+    fn set_abort_event(&mut self, event: Option<InterruptSource>);
 
-    // Set data pattern that aborts a transfer
-    fn set_abort_pattern(&self, pattern: Option<u8>);
+    /// Set data pattern that aborts a transfer
+    fn set_abort_pattern(&mut self, pattern: Option<u8>);
+
+    /// Get source pointer
+    fn source_pointer(&self) -> PhysicalAddress;
+
+    /// Get destination pointer
+    fn destination_pointer(&self) -> PhysicalAddress;
 
     /// Enable/disable individual interrupt sources
     ///
     /// This function does not configure the interrupt controller.
-    fn irq_enable(&self, irq: BitFlags<DmaIrq>);
+    fn irq_enable(&mut self, irq: BitFlags<DmaIrq>);
+
+    /// Get interrupt flags
+    fn irq_flags(&self) -> BitFlags<DmaIrq>;
+
+    /// Set interrupt flags
+    fn set_irq_flags(&mut self, flags: BitFlags<DmaIrq>);
+
+    /// Clear all interrupt flags
+    fn clear_all_irq_flags(&mut self) {
+        self.set_irq_flags(BitFlags::<DmaIrq>::default());
+    }
 
     /// Enable DMA channel
     ///
@@ -69,7 +86,7 @@ pub trait Ops {
     ///
     /// Unsafe because the DMA controller will access the memory blocks
     /// specified as source and destination without any checks
-    unsafe fn enable(&self, mode: XferMode);
+    unsafe fn enable(&mut self, mode: XferMode);
 
     /// Check if a DMA channel is enabled
     ///
@@ -77,10 +94,10 @@ pub trait Ops {
     fn is_enabled(&self) -> bool;
 
     /// Disable a DMA channel
-    fn disable(&self);
+    fn disable(&mut self);
 
     /// Force a cell transfer
-    fn force(&self);
+    fn force(&mut self);
 }
 
 pub struct DmaChannel<D> {
@@ -90,27 +107,27 @@ pub struct DmaChannel<D> {
 macro_rules! dma {
     ($Id:ident, $Dmac:ident) => {
         impl Ops for DmaChannel<$Dmac> {
-            fn set_source(&self, addr: PhysicalAddress, size: usize) {
+            fn set_source(&mut self, addr: PhysicalAddress, size: usize) {
                 unsafe {
                     self.ch.ssa.write(|w| w.bits(addr.address() as u32));
                     self.ch.ssiz.write(|w| w.bits(size as u32));
                 }
             }
 
-            fn set_dest(&self, addr: PhysicalAddress, size: usize) {
+            fn set_dest(&mut self, addr: PhysicalAddress, size: usize) {
                 unsafe {
                     self.ch.dsa.write(|w| w.bits(addr.address() as u32));
                     self.ch.dsiz.write(|w| w.bits(size as u32));
                 }
             }
 
-            fn set_cell_size(&self, size: usize) {
+            fn set_cell_size(&mut self, size: usize) {
                 unsafe {
                     self.ch.csiz.write(|w| w.bits(size as u32));
                 }
             }
 
-            fn set_start_event(&self, event: Option<InterruptSource>) {
+            fn set_start_event(&mut self, event: Option<InterruptSource>) {
                 match event {
                     Some(e) => {
                         self.ch
@@ -123,7 +140,7 @@ macro_rules! dma {
                 }
             }
 
-            fn set_abort_event(&self, event: Option<InterruptSource>) {
+            fn set_abort_event(&mut self, event: Option<InterruptSource>) {
                 match event {
                     Some(e) => {
                         self.ch
@@ -136,7 +153,7 @@ macro_rules! dma {
                 }
             }
 
-            fn set_abort_pattern(&self, pattern: Option<u8>) {
+            fn set_abort_pattern(&mut self, pattern: Option<u8>) {
                 match pattern {
                     Some(p) => {
                         self.ch.dat.write(|w| unsafe { w.dchpdat().bits(p) });
@@ -148,13 +165,32 @@ macro_rules! dma {
                 }
             }
 
-            fn irq_enable(&self, irq: BitFlags<DmaIrq>) {
+            fn source_pointer(&self) -> PhysicalAddress {
+                PhysicalAddress::from_usize(self.ch.sptr.read().bits() as usize)
+            }
+
+            fn destination_pointer(&self) -> PhysicalAddress {
+                PhysicalAddress::from_usize(self.ch.dptr.read().bits() as usize)
+            }
+
+            fn irq_enable(&mut self, irq: BitFlags<DmaIrq>) {
                 self.ch
                     .int
                     .write(|w| unsafe { w.bits((irq.bits() as u32) << 16) });
             }
 
-            unsafe fn enable(&self, mode: XferMode) {
+            fn irq_flags(&self) -> BitFlags<DmaIrq> {
+                let int = self.ch.int.read().bits();
+                unsafe { BitFlags::from_bits_unchecked(int as u8) }
+            }
+
+            fn set_irq_flags(&mut self, flags: BitFlags<DmaIrq>) {
+                self.ch.int.modify(|r, w| unsafe {
+                    w.bits((r.bits() & 0xffff_ff00) | flags.bits() as u32)
+                });
+            }
+
+            unsafe fn enable(&mut self, mode: XferMode) {
                 match mode {
                     XferMode::OneShot => self.ch.contclr.write(|w| w.chaen().bit(true)),
                     XferMode::Auto => self.ch.contset.write(|w| w.chaen().bit(true)),
@@ -166,12 +202,12 @@ macro_rules! dma {
                 self.ch.cont.read().chen().bit()
             }
 
-            fn disable(&self) {
+            fn disable(&mut self) {
                 self.ch.contclr.write(|w| w.chen().bit(true));
                 while self.ch.cont.read().chbusy().bit() {}
             }
 
-            fn force(&self) {
+            fn force(&mut self) {
                 self.ch.econset.write(|w| w.cforce().bit(true));
             }
         }

@@ -45,7 +45,7 @@ pub trait Ops {
     /// Caller must make sure that the physical address block specified by
     /// `addr` and `len` refers to a valid memory block during the whole
     /// DMA transfer.
-    unsafe fn transmit_dma<D: dma::Ops>(&mut self, dma: &D, addr: PhysicalAddress, len: usize) -> Result<(), Error>;
+    unsafe fn transmit_dma<D: dma::Ops>(&mut self, dma: &mut D, addr: PhysicalAddress, len: usize) -> Result<(), Error>;
     fn rstart(&self) -> Result<(), Error>;
     fn stop(&mut self);
     fn receive(&mut self, data: &mut [u8], nack_last: bool) -> Result<(), Error>;
@@ -105,7 +105,7 @@ macro_rules! i2c_impl {
                 Ok(())
             }
 
-            unsafe fn transmit_dma<D: dma::Ops>(&mut self, dma: &D, addr: PhysicalAddress, len: usize) -> Result<(), Error> {
+            unsafe fn transmit_dma<D: dma::Ops>(&mut self, dma: &mut D, addr: PhysicalAddress, len: usize) -> Result<(), Error> {
                 if !self.transaction_ongoing {
                     while self.i2c_busy() {}
                     // generate start condition
