@@ -1,12 +1,12 @@
 //! I2C driver for PIC32
 
-use crate::pac::{I2C1, I2C2};
-use crate::time::Hertz;
 use crate::dma;
 use crate::int::InterruptSource;
+use crate::pac::{I2C1, I2C2};
+use crate::time::Hertz;
 use embedded_hal::blocking;
-use mips_mcu::PhysicalAddress;
 use mips_mcu::fmt::virt_to_phys;
+use mips_mcu::PhysicalAddress;
 
 /// I2C clock frequency specifier
 /// The values of this enum correspond to the divisor values mentioned in the
