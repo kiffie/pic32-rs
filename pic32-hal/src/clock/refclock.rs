@@ -5,7 +5,6 @@ use core::marker::PhantomData;
 #[cfg(any(
     feature = "pic32mx1xxfxxxb",
     feature = "pic32mx2xxfxxxb",
-    feature = "pic32mx4xxfxxxh",
     feature = "pic32mx37x",
     feature = "pic32mx47x",
 ))]
@@ -39,7 +38,6 @@ pub struct Refclock {
 #[cfg(any(
     feature = "pic32mx1xxfxxxb",
     feature = "pic32mx2xxfxxxb",
-    feature = "pic32mx4xxfxxxh",
     feature = "pic32mx37x",
     feature = "pic32mx47x",
 ))]

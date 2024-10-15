@@ -11,7 +11,6 @@ use core::marker::PhantomData;
     feature = "pic32mx1xxfxxxb",
     feature = "pic32mx2xxfxxxb",
     feature = "pic32mx2x4fxxxb",
-    feature = "pic32mx4xxfxxxh",
     feature = "pic32mx37x",
     feature = "pic32mx47x",
 ))]
@@ -23,7 +22,6 @@ use crate::pac::CRU;
 #[cfg(any(
     feature = "pic32mx1xxfxxxb",
     feature = "pic32mx2xxfxxxb",
-    feature = "pic32mx4xxfxxxh",
     feature = "pic32mx37x",
     feature = "pic32mx47x",
 ))]
@@ -38,7 +36,6 @@ pub struct Osc {
 #[cfg(any(
     feature = "pic32mx1xxfxxxb",
     feature = "pic32mx2xxfxxxb",
-    feature = "pic32mx4xxfxxxh",
     feature = "pic32mx37x",
     feature = "pic32mx47x",
 ))]
@@ -100,7 +97,6 @@ impl Osc {
 #[cfg(any(
     feature = "pic32mx1xxfxxxb",
     feature = "pic32mx2xxfxxxb",
-    feature = "pic32mx4xxfxxxh",
     feature = "pic32mx37x",
     feature = "pic32mx47x",
 ))]
