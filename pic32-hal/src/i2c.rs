@@ -25,10 +25,11 @@ pub enum Error {
     InvalidState,
 }
 
-/// An I2C driver for the PIC32. Contains primitives `transmit()`, `receive()`,
-/// `rstart()`, `stop()` that can be called one after another to build a complex
-/// I2C transaction. A Transaction must be started with `transmit()` and
-/// concluded with `stop()`
+/// An I2C driver for the PIC32.
+///
+/// Contains primitives `transmit()`, `receive()`, `rstart()`, `stop()` that can
+/// be called one after another to build a complex I2C transaction. A
+/// Transaction must be started with `transmit()` and concluded with `stop()`
 pub struct I2c<I2C> {
     i2c: I2C,
     transaction_ongoing: bool,
