@@ -3,7 +3,7 @@ name = "usb_serial"
 version = "0.3.0"
 authors = ["Stephan <kiffie@mailbox.org>"]
 license = "MIT OR Apache-2.0"
-edition = "2018"
+edition = "2021"
 
 [features]
 pic32mx2xxfxxxb = ["pic32-hal/pic32mx2xxfxxxb"]
@@ -12,10 +12,10 @@ default = ["pic32mx2xxfxxxb"]
 
 [dependencies]
 mips-mcu = { version = "0.3.0", features = ["critical-section-single-core"] }
-mips-rt = "0.3.2"
-mips-mcu-alloc = "0.6.1"
+mips-rt = "0.3.6"
+mips-mcu-alloc = "0.6.2"
 embedded-hal = "0.2.7"
-pic32-hal = { version = "0.10.0", features = ["usb-device"] }
+pic32-hal = { version = "0.11.0", features = ["usb-device"] }
 panic-halt = "0.2.0"
 usb-device = "0.2.9"
 usbd-serial = "0.1.1"
