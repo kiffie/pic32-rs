@@ -61,8 +61,12 @@ macro_rules! oc_impl {
     ($constructor: ident, $ocmp: ty) => {
         impl<TIMEBASE> Oc<$ocmp, TIMEBASE> {
             pub fn $constructor(ocmp: $ocmp, stop_in_idle_mode: bool) -> Self {
-                ocmp.cont.write(|w| w.on().clear_bit().sidl().bit(stop_in_idle_mode));
-                Self { ocmp, _timebase: PhantomData }
+                ocmp.cont
+                    .write(|w| w.on().clear_bit().sidl().bit(stop_in_idle_mode));
+                Self {
+                    ocmp,
+                    _timebase: PhantomData,
+                }
             }
 
             /// Deactivate the output compare module and return the PAC object
@@ -81,7 +85,12 @@ macro_rules! oc_impl {
         impl Oc<$ocmp, Timebase16even> {
             pub fn turn_on(&mut self, config: OcConfig) {
                 self.ocmp.cont.modify(|_, w| unsafe {
-                    w.oc32().bit(false).octsel().bit(false).ocm().bits(config.ocm_bits())
+                    w.oc32()
+                        .bit(false)
+                        .octsel()
+                        .bit(false)
+                        .ocm()
+                        .bits(config.ocm_bits())
                 });
                 let (r, rs) = match config {
                     OcConfig::RisingSlope(r) | OcConfig::FallingSlope(r) | OcConfig::Toggle(r) => {
@@ -99,7 +108,12 @@ macro_rules! oc_impl {
         impl Oc<$ocmp, Timebase16odd> {
             pub fn turn_on(&mut self, config: OcConfig) {
                 self.ocmp.cont.modify(|_, w| unsafe {
-                    w.oc32().bit(false).octsel().bit(true).ocm().bits(config.ocm_bits())
+                    w.oc32()
+                        .bit(false)
+                        .octsel()
+                        .bit(true)
+                        .ocm()
+                        .bits(config.ocm_bits())
                 });
                 let (r, rs) = match config {
                     OcConfig::RisingSlope(r) | OcConfig::FallingSlope(r) | OcConfig::Toggle(r) => {
@@ -116,7 +130,12 @@ macro_rules! oc_impl {
         impl Oc<$ocmp, Timebase32> {
             pub fn turn_on(&mut self, config: OcConfig) {
                 self.ocmp.cont.modify(|_, w| unsafe {
-                    w.oc32().bit(true).octsel().bit(false).ocm().bits(config.ocm_bits())
+                    w.oc32()
+                        .bit(true)
+                        .octsel()
+                        .bit(false)
+                        .ocm()
+                        .bits(config.ocm_bits())
                 });
                 let (r, rs) = match config {
                     OcConfig::RisingSlope(r) | OcConfig::FallingSlope(r) | OcConfig::Toggle(r) => {
@@ -162,8 +181,12 @@ macro_rules! pwm_impl {
                     false => 0b110,
                     true => 0b111,
                 };
-                ocmp.cont.write(|w| unsafe { w.sidl().bit(stop_in_idle_mode).ocm().bits(ocm) });
-                Pwm { ocmp, _timebase: PhantomData }
+                ocmp.cont
+                    .write(|w| unsafe { w.sidl().bit(stop_in_idle_mode).ocm().bits(ocm) });
+                Pwm {
+                    ocmp,
+                    _timebase: PhantomData,
+                }
             }
 
             /// Get fault state
@@ -184,7 +207,9 @@ macro_rules! pwm_impl {
             type Duty = u32;
 
             fn enable(&mut self) {
-                self.ocmp.cont.modify(|_, w| w.octsel().bit(false).oc32().bit(false));
+                self.ocmp
+                    .cont
+                    .modify(|_, w| w.octsel().bit(false).oc32().bit(false));
                 self.ocmp.contset.write(|w| w.on().set_bit());
             }
 
@@ -209,7 +234,9 @@ macro_rules! pwm_impl {
             type Duty = u32;
 
             fn enable(&mut self) {
-                self.ocmp.cont.modify(|_, w| w.octsel().bit(true).oc32().bit(false));
+                self.ocmp
+                    .cont
+                    .modify(|_, w| w.octsel().bit(true).oc32().bit(false));
                 self.ocmp.contset.write(|w| w.on().set_bit());
             }
 
@@ -234,7 +261,9 @@ macro_rules! pwm_impl {
             type Duty = u32;
 
             fn enable(&mut self) {
-                self.ocmp.cont.modify(|_, w| w.octsel().bit(false).oc32().bit(true));
+                self.ocmp
+                    .cont
+                    .modify(|_, w| w.octsel().bit(false).oc32().bit(true));
                 self.ocmp.contset.write(|w| w.on().set_bit());
             }
 
@@ -261,13 +290,14 @@ macro_rules! pwm_impl {
         }
 
         impl SetDutyCycle for Pwm<$ocmp, Timebase16even> {
-
             fn max_duty_cycle(&self) -> u16 {
                 unsafe { (*<$timer_even>::ptr()).pr.read().pr().bits() as u16 + 1 }
             }
 
             fn set_duty_cycle(&mut self, duty: u16) -> Result<(), Self::Error> {
-                self.ocmp.cont.modify(|_, w| w.octsel().bit(false).oc32().bit(false));
+                self.ocmp
+                    .cont
+                    .modify(|_, w| w.octsel().bit(false).oc32().bit(false));
                 self.ocmp.contset.write(|w| w.on().set_bit());
                 self.ocmp.rs.write(|w| unsafe { w.rs().bits(duty as u32) });
                 Ok(())
@@ -275,19 +305,19 @@ macro_rules! pwm_impl {
         }
 
         impl SetDutyCycle for Pwm<$ocmp, Timebase16odd> {
-
             fn max_duty_cycle(&self) -> u16 {
                 unsafe { (*<$timer_odd>::ptr()).pr.read().pr().bits() as u16 + 1 }
             }
 
             fn set_duty_cycle(&mut self, duty: u16) -> Result<(), Self::Error> {
-                self.ocmp.cont.modify(|_, w| w.octsel().bit(true).oc32().bit(false));
+                self.ocmp
+                    .cont
+                    .modify(|_, w| w.octsel().bit(true).oc32().bit(false));
                 self.ocmp.contset.write(|w| w.on().set_bit());
                 self.ocmp.rs.write(|w| unsafe { w.rs().bits(duty as u32) });
                 Ok(())
             }
         }
-
     };
 }
 
