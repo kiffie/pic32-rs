@@ -3,9 +3,10 @@
 //!
 //! Uses the MIPS CP0 registers "count" and "compare".
 
-use crate::hal::blocking::delay::{DelayMs, DelayUs};
 use crate::pac::INT; // interrupt controller
 use crate::time::Hertz;
+use embedded_hal::delay::DelayNs;
+use embedded_hal_0_2::blocking::delay::{DelayMs, DelayUs};
 
 use critical_section::Mutex;
 pub use mips_mcu::core_timer::read_count;
@@ -13,42 +14,51 @@ use mips_mcu::core_timer::{read_compare, write_compare};
 
 use core::cell::Cell;
 
+const fn rounded_div_u32(a: u32, b: u32) -> u32 {
+    (a + b / 2) / b
+}
+
 /// Delay implementation based on read-only access to the core timer "count"
 /// register
 pub struct Delay {
     ticks_per_us: u32,
+    nanos_per_tick: u32,
 }
 
 impl Delay {
     pub const fn new(sysclock: Hertz) -> Self {
         let ticks_per_us = sysclock.0 / 1_000_000 / 2;
-        Delay { ticks_per_us }
+        let nanos_per_tick = rounded_div_u32(2 * 1_000_000_000, sysclock.0);
+        Delay {
+            ticks_per_us,
+            nanos_per_tick,
+        }
     }
 }
 
 impl DelayMs<u32> for Delay {
     fn delay_ms(&mut self, ms: u32) {
-        self.delay_us(ms * 1_000);
+        DelayUs::delay_us(self, ms * 1_000);
     }
 }
 
 impl DelayMs<i32> for Delay {
     fn delay_ms(&mut self, ms: i32) {
         if ms >= 0 {
-            self.delay_us((ms as u32) * 1000);
+            DelayUs::delay_us(self, (ms as u32) * 1000);
         }
     }
 }
 
 impl DelayMs<u16> for Delay {
     fn delay_ms(&mut self, ms: u16) {
-        self.delay_ms(ms as u32);
+        DelayMs::delay_ms(self, ms as u32);
     }
 }
 
 impl DelayMs<u8> for Delay {
     fn delay_ms(&mut self, ms: u8) {
-        self.delay_ms(ms as u32);
+        DelayMs::delay_ms(self, ms as u32);
     }
 }
 
@@ -84,7 +94,16 @@ impl DelayUs<u16> for Delay {
 
 impl DelayUs<u8> for Delay {
     fn delay_us(&mut self, us: u8) {
-        self.delay_us(us as u16)
+        DelayUs::delay_us(self, us as u16)
+    }
+}
+
+impl DelayNs for Delay {
+    fn delay_ns(&mut self, ns: u32) {
+        // read the count first for most accurate timing
+        let start = read_count();
+        let ticks = ns / self.nanos_per_tick;
+        while read_count().wrapping_sub(start) < ticks {}
     }
 }
 

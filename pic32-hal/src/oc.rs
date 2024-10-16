@@ -3,7 +3,9 @@
 
 use crate::pac::{OCMP1, OCMP2, OCMP3, OCMP4, OCMP5};
 use crate::pac::{TMR2, TMR3};
-use embedded_hal::PwmPin;
+use core::convert::Infallible;
+use embedded_hal::pwm::{ErrorType, SetDutyCycle};
+use embedded_hal_0_2::PwmPin;
 
 use core::marker::PhantomData;
 
@@ -253,6 +255,39 @@ macro_rules! pwm_impl {
                 pr.saturating_add(1)
             }
         }
+
+        impl<TIMEBASE> ErrorType for Pwm<$ocmp, TIMEBASE> {
+            type Error = Infallible;
+        }
+
+        impl SetDutyCycle for Pwm<$ocmp, Timebase16even> {
+
+            fn max_duty_cycle(&self) -> u16 {
+                unsafe { (*<$timer_even>::ptr()).pr.read().pr().bits() as u16 + 1 }
+            }
+
+            fn set_duty_cycle(&mut self, duty: u16) -> Result<(), Self::Error> {
+                self.ocmp.cont.modify(|_, w| w.octsel().bit(false).oc32().bit(false));
+                self.ocmp.contset.write(|w| w.on().set_bit());
+                self.ocmp.rs.write(|w| unsafe { w.rs().bits(duty as u32) });
+                Ok(())
+            }
+        }
+
+        impl SetDutyCycle for Pwm<$ocmp, Timebase16odd> {
+
+            fn max_duty_cycle(&self) -> u16 {
+                unsafe { (*<$timer_odd>::ptr()).pr.read().pr().bits() as u16 + 1 }
+            }
+
+            fn set_duty_cycle(&mut self, duty: u16) -> Result<(), Self::Error> {
+                self.ocmp.cont.modify(|_, w| w.octsel().bit(true).oc32().bit(false));
+                self.ocmp.contset.write(|w| w.on().set_bit());
+                self.ocmp.rs.write(|w| unsafe { w.rs().bits(duty as u32) });
+                Ok(())
+            }
+        }
+
     };
 }
 
