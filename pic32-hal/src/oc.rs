@@ -167,9 +167,9 @@ pub struct Pwm<OCMP, TIMEBASE> {
 macro_rules! pwm_impl {
     ($constructor: ident, $ocmp: ty, $timer_even: ty, $timer_odd: ty) => {
         impl<TIMEBASE> Pwm<$ocmp, TIMEBASE> {
-            /// Initialize the output compare module for 16-bit PWM
+            /// Initialize the output compare module for PWM.
             ///
-            /// The respetive timer must be set up previously. The HAL code for PWM
+            /// The respective timer must be set up previously. The HAL code for PWM
             /// reads the respective timer period register to get the maximum duty cycle
             /// value.
             pub fn $constructor(
