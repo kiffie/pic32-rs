@@ -258,6 +258,18 @@ macro_rules! pwm_impl {
                 self.ocmp.cont.read().ocflt().bit()
             }
 
+            /// Turn PWM on.
+            ///
+            /// Can be used to re-enable PWM after a fault has been detected.
+            pub fn on(&mut self) {
+                self.ocmp.contset.write(|w| w.on().set_bit());
+            }
+
+            /// Turn PWM off.
+            pub fn off(&mut self) {
+                self.ocmp.contclr.write(|w| w.on().set_bit());
+            }
+
             /// Deactivate the output compare module and return the PAC object
             pub fn free(self) -> $ocmp {
                 self.ocmp.cont.write(|w| w.on().clear_bit());
