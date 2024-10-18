@@ -3,7 +3,7 @@
 use crate::pac::{SPI1, SPI2};
 use core::{cmp::max, slice};
 use embedded_hal::spi::{ErrorKind, ErrorType, SpiBus};
-pub use embedded_hal_0_2::spi::{Mode, Phase, Polarity};
+pub use embedded_hal::spi::{Mode, Phase, Polarity};
 
 /// SPI error
 pub type Error = ErrorKind;
@@ -84,9 +84,8 @@ macro_rules! spi {
                                 .bit(ckp)
                                 .msten()
                                 .bit(true)
-                                .on()
-                                .bit(true)
                         });
+                        spi.con1set.write(|w| w.on().bit(true));
                     }
                     Proto::AudioI2s(frame_format) => {
                         spi.con2.write(|w| unsafe {
@@ -173,24 +172,27 @@ macro_rules! spi {
 
             fn transfer(&mut self, read: &mut [u8], write: &[u8]) -> Result<(), Self::Error> {
                 let xfer_len = max(read.len(), write.len());
-                let mut rd_ctr = xfer_len;
-                let mut wr_ctr = xfer_len;
-                let mut rd = read.iter_mut().fuse();
-                let mut wr = write.iter().fuse();
-                while rd_ctr > 0 || wr_ctr > 0 {
+                let mut rd_ndx = 0;
+                let mut wr_ndx = 0;
+                // not using iterators for performance reasons
+                while rd_ndx < xfer_len || wr_ndx < xfer_len {
                     // write to FIFO
-                    if wr_ctr > 0 && !self.spi.stat.read().spitbf().bit() {
-                        let byte = *wr.next().unwrap_or(&0);
+                    if wr_ndx < xfer_len && !self.spi.stat.read().spitbf().bit() {
+                        let byte = if wr_ndx < write.len() {
+                            write[wr_ndx]
+                        } else {
+                            0x00
+                        };
                         self.spi.buf.write(|w| unsafe { w.bits(byte as u32) });
-                        wr_ctr -= 1;
+                        wr_ndx += 1;
                     }
                     // read from FIFO
-                    if rd_ctr > 0 && !self.spi.stat.read().spirbe().bit() {
+                    if rd_ndx < xfer_len && !self.spi.stat.read().spirbe().bit() {
                         let byte = self.spi.buf.read().bits() as u8;
-                        if let Some(b) = rd.next() {
-                            *b = byte;
+                        if rd_ndx < read.len() {
+                            read[rd_ndx] = byte;
                         }
-                        rd_ctr -= 1;
+                        rd_ndx += 1;
                     }
                 }
                 Ok(())
