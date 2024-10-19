@@ -3,9 +3,14 @@
 
 use crate::pac::{OCMP1, OCMP2, OCMP3, OCMP4, OCMP5};
 use crate::pac::{TMR2, TMR3};
-use embedded_hal::PwmPin;
+use core::convert::Infallible;
+use embedded_hal::pwm::{ErrorType, SetDutyCycle};
+use embedded_hal_0_2::PwmPin;
 
 use core::marker::PhantomData;
+
+/// Marker for incomplete configuration.
+pub struct TimebaseUninit;
 
 /// Marker for configurations where the even numbered 16-bit timer (e.g. Timer 2) is used as a time base
 pub struct Timebase16even;
@@ -57,10 +62,51 @@ pub struct Oc<OCMP, TIMEBASE> {
 
 macro_rules! oc_impl {
     ($constructor: ident, $ocmp: ty) => {
-        impl<TIMEBASE> Oc<$ocmp, TIMEBASE> {
+        impl Oc<$ocmp, TimebaseUninit> {
             pub fn $constructor(ocmp: $ocmp, stop_in_idle_mode: bool) -> Self {
-                ocmp.cont.write(|w| w.on().clear_bit().sidl().bit(stop_in_idle_mode));
-                Self { ocmp, _timebase: PhantomData }
+                ocmp.cont
+                    .write(|w| w.on().clear_bit().sidl().bit(stop_in_idle_mode));
+                Self {
+                    ocmp,
+                    _timebase: PhantomData,
+                }
+            }
+        }
+
+        impl<TIMEBASE> Oc<$ocmp, TIMEBASE> {
+            /// Select the even numbered 16-bit timer as the time base.
+            pub fn timebase16even(self) -> Oc<$ocmp, Timebase16even> {
+                self.ocmp
+                    .cont
+                    .modify(|_, w| w.octsel().bit(false).oc32().bit(false));
+                Oc {
+                    ocmp: self.ocmp,
+                    _timebase: PhantomData,
+                }
+            }
+
+            /// Select the odd numbered 16-bit timer as the time base.
+            pub fn timebase16odd(self) -> Oc<$ocmp, Timebase16odd> {
+                self.ocmp
+                    .cont
+                    .modify(|_, w| w.octsel().bit(true).oc32().bit(false));
+                self.ocmp.contset.write(|w| w.on().set_bit());
+                Oc {
+                    ocmp: self.ocmp,
+                    _timebase: PhantomData,
+                }
+            }
+
+            /// Select both 16-bit timers as a 32-bit time base.
+            pub fn timebase32(self) -> Oc<$ocmp, Timebase32> {
+                self.ocmp
+                    .cont
+                    .modify(|_, w| w.octsel().bit(false).oc32().bit(true));
+                self.ocmp.contset.write(|w| w.on().set_bit());
+                Oc {
+                    ocmp: self.ocmp,
+                    _timebase: PhantomData,
+                }
             }
 
             /// Deactivate the output compare module and return the PAC object
@@ -78,9 +124,9 @@ macro_rules! oc_impl {
 
         impl Oc<$ocmp, Timebase16even> {
             pub fn turn_on(&mut self, config: OcConfig) {
-                self.ocmp.cont.modify(|_, w| unsafe {
-                    w.oc32().bit(false).octsel().bit(false).ocm().bits(config.ocm_bits())
-                });
+                self.ocmp
+                    .cont
+                    .modify(|_, w| unsafe { w.ocm().bits(config.ocm_bits()) });
                 let (r, rs) = match config {
                     OcConfig::RisingSlope(r) | OcConfig::FallingSlope(r) | OcConfig::Toggle(r) => {
                         (r, 0)
@@ -96,9 +142,9 @@ macro_rules! oc_impl {
 
         impl Oc<$ocmp, Timebase16odd> {
             pub fn turn_on(&mut self, config: OcConfig) {
-                self.ocmp.cont.modify(|_, w| unsafe {
-                    w.oc32().bit(false).octsel().bit(true).ocm().bits(config.ocm_bits())
-                });
+                self.ocmp
+                    .cont
+                    .modify(|_, w| unsafe { w.ocm().bits(config.ocm_bits()) });
                 let (r, rs) = match config {
                     OcConfig::RisingSlope(r) | OcConfig::FallingSlope(r) | OcConfig::Toggle(r) => {
                         (r, 0)
@@ -113,9 +159,9 @@ macro_rules! oc_impl {
         }
         impl Oc<$ocmp, Timebase32> {
             pub fn turn_on(&mut self, config: OcConfig) {
-                self.ocmp.cont.modify(|_, w| unsafe {
-                    w.oc32().bit(true).octsel().bit(false).ocm().bits(config.ocm_bits())
-                });
+                self.ocmp
+                    .cont
+                    .modify(|_, w| unsafe { w.ocm().bits(config.ocm_bits()) });
                 let (r, rs) = match config {
                     OcConfig::RisingSlope(r) | OcConfig::FallingSlope(r) | OcConfig::Toggle(r) => {
                         (r, 0)
@@ -145,10 +191,10 @@ pub struct Pwm<OCMP, TIMEBASE> {
 
 macro_rules! pwm_impl {
     ($constructor: ident, $ocmp: ty, $timer_even: ty, $timer_odd: ty) => {
-        impl<TIMEBASE> Pwm<$ocmp, TIMEBASE> {
-            /// Initialize the output compare module for 16-bit PWM
+        impl Pwm<$ocmp, TimebaseUninit> {
+            /// Initialize the output compare module for PWM.
             ///
-            /// The respetive timer must be set up previously. The HAL code for PWM
+            /// The respective timer must be set up previously. The HAL code for PWM
             /// reads the respective timer period register to get the maximum duty cycle
             /// value.
             pub fn $constructor(
@@ -160,8 +206,49 @@ macro_rules! pwm_impl {
                     false => 0b110,
                     true => 0b111,
                 };
-                ocmp.cont.write(|w| unsafe { w.sidl().bit(stop_in_idle_mode).ocm().bits(ocm) });
-                Pwm { ocmp, _timebase: PhantomData }
+                ocmp.cont
+                    .write(|w| unsafe { w.sidl().bit(stop_in_idle_mode).ocm().bits(ocm) });
+                Pwm {
+                    ocmp,
+                    _timebase: PhantomData,
+                }
+            }
+        }
+
+        impl<TIMEBASE> Pwm<$ocmp, TIMEBASE> {
+            /// Select the even numbered 16-bit timer as the time base.
+            pub fn timebase16even(self) -> Pwm<$ocmp, Timebase16even> {
+                self.ocmp
+                    .cont
+                    .modify(|_, w| w.octsel().bit(false).oc32().bit(false).on().bit(true));
+                Pwm {
+                    ocmp: self.ocmp,
+                    _timebase: PhantomData,
+                }
+            }
+
+            /// Select the odd numbered 16-bit timer as the time base.
+            pub fn timebase16odd(self) -> Pwm<$ocmp, Timebase16odd> {
+                self.ocmp
+                    .cont
+                    .modify(|_, w| w.octsel().bit(true).oc32().bit(false).on().bit(true));
+                self.ocmp.contset.write(|w| w.on().set_bit());
+                Pwm {
+                    ocmp: self.ocmp,
+                    _timebase: PhantomData,
+                }
+            }
+
+            /// Select both 16-bit timers as a 32-bit time base.
+            pub fn timebase32(self) -> Pwm<$ocmp, Timebase32> {
+                self.ocmp
+                    .cont
+                    .modify(|_, w| w.octsel().bit(false).oc32().bit(true).on().bit(true));
+                self.ocmp.contset.write(|w| w.on().set_bit());
+                Pwm {
+                    ocmp: self.ocmp,
+                    _timebase: PhantomData,
+                }
             }
 
             /// Get fault state
@@ -169,6 +256,18 @@ macro_rules! pwm_impl {
             /// Returns false if fault pin is not enabled.
             pub fn fault(&self) -> bool {
                 self.ocmp.cont.read().ocflt().bit()
+            }
+
+            /// Turn PWM on.
+            ///
+            /// Can be used to re-enable PWM after a fault has been detected.
+            pub fn on(&mut self) {
+                self.ocmp.contset.write(|w| w.on().set_bit());
+            }
+
+            /// Turn PWM off.
+            pub fn off(&mut self) {
+                self.ocmp.contclr.write(|w| w.on().set_bit());
             }
 
             /// Deactivate the output compare module and return the PAC object
@@ -182,7 +281,6 @@ macro_rules! pwm_impl {
             type Duty = u32;
 
             fn enable(&mut self) {
-                self.ocmp.cont.modify(|_, w| w.octsel().bit(false).oc32().bit(false));
                 self.ocmp.contset.write(|w| w.on().set_bit());
             }
 
@@ -207,7 +305,6 @@ macro_rules! pwm_impl {
             type Duty = u32;
 
             fn enable(&mut self) {
-                self.ocmp.cont.modify(|_, w| w.octsel().bit(true).oc32().bit(false));
                 self.ocmp.contset.write(|w| w.on().set_bit());
             }
 
@@ -232,7 +329,6 @@ macro_rules! pwm_impl {
             type Duty = u32;
 
             fn enable(&mut self) {
-                self.ocmp.cont.modify(|_, w| w.octsel().bit(false).oc32().bit(true));
                 self.ocmp.contset.write(|w| w.on().set_bit());
             }
 
@@ -251,6 +347,32 @@ macro_rules! pwm_impl {
             fn get_max_duty(&self) -> Self::Duty {
                 let pr = unsafe { (*<$timer_even>::ptr()).pr.read().pr().bits() };
                 pr.saturating_add(1)
+            }
+        }
+
+        impl<TIMEBASE> ErrorType for Pwm<$ocmp, TIMEBASE> {
+            type Error = Infallible;
+        }
+
+        impl SetDutyCycle for Pwm<$ocmp, Timebase16even> {
+            fn max_duty_cycle(&self) -> u16 {
+                unsafe { (*<$timer_even>::ptr()).pr.read().pr().bits() as u16 + 1 }
+            }
+
+            fn set_duty_cycle(&mut self, duty: u16) -> Result<(), Self::Error> {
+                self.ocmp.rs.write(|w| unsafe { w.rs().bits(duty as u32) });
+                Ok(())
+            }
+        }
+
+        impl SetDutyCycle for Pwm<$ocmp, Timebase16odd> {
+            fn max_duty_cycle(&self) -> u16 {
+                unsafe { (*<$timer_odd>::ptr()).pr.read().pr().bits() as u16 + 1 }
+            }
+
+            fn set_duty_cycle(&mut self, duty: u16) -> Result<(), Self::Error> {
+                self.ocmp.rs.write(|w| unsafe { w.rs().bits(duty as u32) });
+                Ok(())
             }
         }
     };

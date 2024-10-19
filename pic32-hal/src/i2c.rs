@@ -4,7 +4,8 @@ use crate::dma;
 use crate::int::InterruptSource;
 use crate::pac::{I2C1, I2C2};
 use crate::time::Hertz;
-use embedded_hal::blocking;
+use embedded_hal::i2c::{ErrorKind, NoAcknowledgeSource, Operation, SevenBitAddress};
+use embedded_hal_0_2::blocking;
 use mips_mcu::fmt::virt_to_phys;
 use mips_mcu::PhysicalAddress;
 
@@ -25,6 +26,15 @@ pub enum Error {
     InvalidState,
 }
 
+impl embedded_hal::i2c::Error for Error {
+    fn kind(&self) -> ErrorKind {
+        match self {
+            Self::TransactionFailed => ErrorKind::NoAcknowledge(NoAcknowledgeSource::Unknown),
+            Self::InvalidState => ErrorKind::Other,
+        }
+    }
+}
+
 /// An I2C driver for the PIC32.
 ///
 /// Contains primitives `transmit()`, `receive()`, `rstart()`, `stop()` that can
@@ -37,6 +47,8 @@ pub struct I2c<I2C> {
 
 /// Primitive I2C Operations
 pub trait Ops {
+    /// Transmit data over the bus. Generate a START condition if called
+    /// first during a transaction.
     fn transmit(&mut self, data: &[u8]) -> Result<(), Error>;
 
     /// Initiate DMA transmission
@@ -46,9 +58,24 @@ pub trait Ops {
     /// Caller must make sure that the physical address block specified by
     /// `addr` and `len` refers to a valid memory block during the whole
     /// DMA transfer.
-    unsafe fn transmit_dma<D: dma::Ops>(&mut self, dma: &mut D, addr: PhysicalAddress, len: usize) -> Result<(), Error>;
-    fn rstart(&self) -> Result<(), Error>;
+    unsafe fn transmit_dma<D: dma::Ops>(
+        &mut self,
+        dma: &mut D,
+        addr: PhysicalAddress,
+        len: usize,
+    ) -> Result<(), Error>;
+
+    /// Generate a start or repeated start condition.
+    fn start(&mut self);
+
+    /// Generate a stop condition and terminate the I2C transaction
     fn stop(&mut self);
+
+    /// Receive data.len() bytes.
+    ///
+    /// `nack_last` determines whether a NACK shall be created after the
+    /// reception of the last byte A transaction must be started before calling
+    /// this function.
     fn receive(&mut self, data: &mut [u8], nack_last: bool) -> Result<(), Error>;
 }
 
@@ -58,7 +85,11 @@ macro_rules! i2c_impl {
             /// Create a new I2C object
             pub fn $Id(i2c: $I2c, pb_clock: Hertz, fscl: Fscl) -> I2c<$I2c> {
                 let divisor = fscl as u32;
-                let round = if pb_clock.0 % divisor > divisor / 2 { 1 } else { 0 };
+                let round = if pb_clock.0 % divisor > divisor / 2 {
+                    1
+                } else {
+                    0
+                };
                 let brg = pb_clock.0 / divisor - 2 + round;
                 unsafe {
                     i2c.brg.write(|w| w.brg().bits(brg as u16));
@@ -83,8 +114,6 @@ macro_rules! i2c_impl {
         }
 
         impl Ops for I2c<$I2c> {
-            /// Transmit data over the bus. Generate a START condition if called
-            /// first during a transaction.
             fn transmit(&mut self, data: &[u8]) -> Result<(), Error> {
                 if !self.transaction_ongoing {
                     while self.i2c_busy() {}
@@ -106,7 +135,12 @@ macro_rules! i2c_impl {
                 Ok(())
             }
 
-            unsafe fn transmit_dma<D: dma::Ops>(&mut self, dma: &mut D, addr: PhysicalAddress, len: usize) -> Result<(), Error> {
+            unsafe fn transmit_dma<D: dma::Ops>(
+                &mut self,
+                dma: &mut D,
+                addr: PhysicalAddress,
+                len: usize,
+            ) -> Result<(), Error> {
                 if !self.transaction_ongoing {
                     while self.i2c_busy() {}
                     // generate start condition
@@ -123,28 +157,24 @@ macro_rules! i2c_impl {
                 Ok(())
             }
 
-            /// Generate a repeated start condition
-            /// A transaction must be started before calling this functions
-            fn rstart(&self) -> Result<(), Error> {
+            fn start(&mut self) {
+                while self.i2c_busy() {}
                 if self.transaction_ongoing {
-                    while self.i2c_busy() {}
+                    // generate repeated start condition
                     self.i2c.contset.write(|w| w.rsen().bit(true));
-                    Ok(())
                 } else {
-                    Err(Error::InvalidState)
+                    // generate start condition
+                    self.i2c.contset.write(|w| w.sen().bit(true));
+                    self.transaction_ongoing = true;
                 }
             }
 
-            /// Generate a stop condition and terminate the I2C transfer
             fn stop(&mut self) {
                 while self.i2c_busy() {}
                 self.i2c.contset.write(|w| w.pen().bit(true));
                 self.transaction_ongoing = false;
             }
 
-            /// Receive data.len() bytes. nack_last determines whether a NACK shall
-            /// be created after the reception of the last byte
-            /// A transaction must be started before calling this function
             fn receive(&mut self, data: &mut [u8], nack_last: bool) -> Result<(), Error> {
                 if !self.transaction_ongoing {
                     return Err(Error::InvalidState);
@@ -200,9 +230,43 @@ macro_rules! i2c_impl {
             ) -> Result<(), Self::Error> {
                 self.transmit(&[addr << 1])?;
                 self.transmit(bytes)?;
-                self.rstart()?;
+                self.start();
                 self.transmit(&[(addr << 1) | 0x01])?;
                 self.receive(buffer, true)?;
+                self.stop();
+                Ok(())
+            }
+        }
+
+        impl embedded_hal::i2c::ErrorType for I2c<$I2c> {
+            type Error = Error;
+        }
+
+        impl embedded_hal::i2c::I2c<SevenBitAddress> for I2c<$I2c> {
+            fn transaction(
+                &mut self,
+                address: SevenBitAddress,
+                operations: &mut [Operation<'_>],
+            ) -> Result<(), Self::Error> {
+                let ops_len = operations.len();
+                let mut prev_rw = false;
+                for (i, op) in operations.iter_mut().enumerate() {
+                    let last = i == ops_len - 1;
+                    let rw = matches!(op, Operation::Read(_));
+                    if i == 0 || prev_rw != rw {
+                        self.start();
+                        self.transmit(&[address << 1 | rw as u8])?;
+                    }
+                    prev_rw = rw;
+                    match op {
+                        Operation::Read(bytes) => {
+                            self.receive(bytes, last)?;
+                        }
+                        Operation::Write(bytes) => {
+                            self.transmit(bytes)?;
+                        }
+                    }
+                }
                 self.stop();
                 Ok(())
             }

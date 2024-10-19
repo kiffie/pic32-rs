@@ -1,6 +1,6 @@
 [package]
 name = "pic32-hal"
-version = "0.11.0"
+version = "0.12.0"
 authors = ["Stephan <kiffie@mailbox.org>"]
 edition = "2021"
 description = "Hardware Abstraction Layer (HAL) for PIC32 microcontrollers"
@@ -20,7 +20,8 @@ device-selected = []
 
 [dependencies]
 nb = "1.0.0"
-embedded-hal = { version = "0.2.7", features = ["unproven"] }
+embedded-hal = "1.0.0"
+embedded_hal_0_2 = { package = "embedded-hal", version = "0.2.7", features = ["unproven"] }
 mips-mcu = "0.3.0"
 mips-rt = "0.3.0"
 critical-section = "1.0.0"

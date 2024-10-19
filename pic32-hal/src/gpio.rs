@@ -42,8 +42,10 @@ macro_rules! port {
         /// GPIO
         pub mod $portx {
             use core::marker::PhantomData;
+            use core::convert::Infallible;
 
-            use crate::hal::digital::v2::*;
+            use embedded_hal_0_2::digital::v2 as eh02;
+            use embedded_hal::digital as eh;
             use crate::pac::$PORTX;
 
             #[allow(unused_imports)]
@@ -192,7 +194,7 @@ macro_rules! port {
                     }
                 }
 
-                impl<MODE> OutputPin for $PXi<Output<MODE>> {
+                impl<MODE> eh02::OutputPin for $PXi<Output<MODE>> {
 
                     type Error = ();
 
@@ -209,18 +211,18 @@ macro_rules! port {
                     }
                 }
 
-                impl<MODE> StatefulOutputPin for $PXi<Output<MODE>> {
+                impl<MODE> eh02::StatefulOutputPin for $PXi<Output<MODE>> {
 
                     fn is_set_high(&self) -> Result<bool, Self::Error> {
                         Ok(unsafe { (*$PORTX::ptr()).lat.read().bits() & (1 << $i) != 0 })
                     }
 
                     fn is_set_low(&self) -> Result<bool, Self::Error> {
-                        self.is_set_high().map(|b| !b)
+                        Ok(unsafe { (*$PORTX::ptr()).lat.read().bits() & (1 << $i) == 0 })
                     }
                 }
 
-                impl<MODE> ToggleableOutputPin for $PXi<Output<MODE>> {
+                impl<MODE> eh02::ToggleableOutputPin for $PXi<Output<MODE>> {
 
                     type Error = ();
 
@@ -230,7 +232,7 @@ macro_rules! port {
                     }
                 }
 
-                impl<MODE> InputPin for $PXi<Input<MODE>> {
+                impl<MODE> eh02::InputPin for $PXi<Input<MODE>> {
 
                     type Error = ();
 
@@ -239,11 +241,11 @@ macro_rules! port {
                     }
 
                     fn is_low(&self) -> Result<bool, Self::Error> {
-                        self.is_high().map(|b| !b)
+                        Ok(unsafe { (*$PORTX::ptr()).port.read().bits() & (1 << $i) == 0 })
                     }
                 }
 
-                impl InputPin for $PXi<Output<OpenDrain>> {
+                impl eh02::InputPin for $PXi<Output<OpenDrain>> {
 
                     type Error = ();
 
@@ -252,7 +254,62 @@ macro_rules! port {
                     }
 
                     fn is_low(&self) -> Result<bool, Self::Error> {
-                        self.is_high().map(|b| !b)
+                        Ok(unsafe { (*$PORTX::ptr()).port.read().bits() & (1 << $i) == 0 })
+                    }
+                }
+
+                impl<MODE> eh::ErrorType for $PXi<MODE> {
+                    type Error = Infallible;
+                }
+
+                impl<MODE> eh::InputPin for $PXi<Input<MODE>> {
+
+                    fn is_high(&mut self) -> Result<bool, Self::Error> {
+                        Ok(unsafe { (*$PORTX::ptr()).lat.read().bits() & (1 << $i) != 0 })
+                    }
+
+                    fn is_low(&mut self) -> Result<bool, Self::Error> {
+                        Ok(unsafe { (*$PORTX::ptr()).lat.read().bits() & (1 << $i) == 0 })
+                    }
+                }
+
+                impl eh::InputPin for $PXi<Output<OpenDrain>> {
+
+                    fn is_high(&mut self) -> Result<bool, Self::Error> {
+                        Ok(unsafe { (*$PORTX::ptr()).lat.read().bits() & (1 << $i) != 0 })
+                    }
+
+                    fn is_low(&mut self) -> Result<bool, Self::Error> {
+                        Ok(unsafe { (*$PORTX::ptr()).lat.read().bits() & (1 << $i) == 0 })
+                    }
+                }
+
+                impl<MODE> eh::OutputPin for $PXi<Output<MODE>> {
+
+                    fn set_low(&mut self) -> Result<(), Self::Error> {
+                        unsafe { (*$PORTX::ptr()).latclr.write(|w| w.bits(1 << $i)) }
+                        Ok(())
+                    }
+
+                    fn set_high(&mut self) -> Result<(), Self::Error> {
+                        unsafe { (*$PORTX::ptr()).latset.write(|w| w.bits(1 << $i)) }
+                        Ok(())
+                    }
+                }
+
+                impl<MODE> eh::StatefulOutputPin for $PXi<Output<MODE>> {
+
+                    fn is_set_high(&mut self) -> Result<bool, Self::Error> {
+                        Ok(unsafe { (*$PORTX::ptr()).lat.read().bits() & (1 << $i) != 0 })
+                    }
+
+                    fn is_set_low(&mut self) -> Result<bool, Self::Error> {
+                        Ok(unsafe { (*$PORTX::ptr()).lat.read().bits() & (1 << $i) == 0 })
+                    }
+
+                    fn toggle(&mut self) -> Result<(), Self::Error> {
+                        unsafe { (*$PORTX::ptr()).latinv.write(|w| w.bits(1 << $i)) };
+                        Ok(())
                     }
                 }
             )+

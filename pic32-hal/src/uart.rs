@@ -7,7 +7,7 @@ use crate::clock::Osc;
 use crate::pac::{UART1, UART2};
 use crate::pps::{input, output, IsConnected, MappedPin};
 
-use embedded_hal::prelude::*;
+use embedded_hal_0_2::prelude::*;
 use nb::block;
 
 /// Uart
@@ -75,7 +75,7 @@ macro_rules! uart_impl {
             }
         }
 
-        impl embedded_hal::serial::Write<u8> for Uart<$Uart, $Rx, $Tx> {
+        impl embedded_hal_0_2::serial::Write<u8> for Uart<$Uart, $Rx, $Tx> {
             type Error = ();
 
             fn flush(&mut self) -> nb::Result<(), Self::Error> {
@@ -89,7 +89,7 @@ macro_rules! uart_impl {
             }
         }
 
-        impl embedded_hal::serial::Write<u8> for Tx<$Uart> {
+        impl embedded_hal_0_2::serial::Write<u8> for Tx<$Uart> {
             type Error = ();
 
             fn flush(&mut self) -> nb::Result<(), Self::Error> {
@@ -114,7 +114,7 @@ macro_rules! uart_impl {
             }
         }
 
-        impl embedded_hal::serial::Read<u8> for Uart<$Uart, $Rx, $Tx> {
+        impl embedded_hal_0_2::serial::Read<u8> for Uart<$Uart, $Rx, $Tx> {
             type Error = ();
 
             fn read(&mut self) -> nb::Result<u8, Self::Error> {
@@ -123,7 +123,7 @@ macro_rules! uart_impl {
             }
         }
 
-        impl embedded_hal::serial::Read<u8> for Rx<$Uart> {
+        impl embedded_hal_0_2::serial::Read<u8> for Rx<$Uart> {
             type Error = ();
 
             fn read(&mut self) -> nb::Result<u8, Self::Error> {
@@ -148,7 +148,7 @@ uart_impl!(uart2, UART2, input::U2rx, output::U2tx);
 
 impl<UART> fmt::Write for Tx<UART>
 where
-    Tx<UART>: embedded_hal::serial::Write<u8>,
+    Tx<UART>: embedded_hal_0_2::serial::Write<u8>,
 {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         let _ = s.as_bytes().iter().map(|c| block!(self.write(*c))).last();
