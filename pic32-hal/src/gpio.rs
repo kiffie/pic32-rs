@@ -265,22 +265,22 @@ macro_rules! port {
                 impl<MODE> eh::InputPin for $PXi<Input<MODE>> {
 
                     fn is_high(&mut self) -> Result<bool, Self::Error> {
-                        Ok(unsafe { (*$PORTX::ptr()).lat.read().bits() & (1 << $i) != 0 })
+                        Ok(unsafe { (*$PORTX::ptr()).port.read().bits() & (1 << $i) != 0 })
                     }
 
                     fn is_low(&mut self) -> Result<bool, Self::Error> {
-                        Ok(unsafe { (*$PORTX::ptr()).lat.read().bits() & (1 << $i) == 0 })
+                        Ok(unsafe { (*$PORTX::ptr()).port.read().bits() & (1 << $i) == 0 })
                     }
                 }
 
                 impl eh::InputPin for $PXi<Output<OpenDrain>> {
 
                     fn is_high(&mut self) -> Result<bool, Self::Error> {
-                        Ok(unsafe { (*$PORTX::ptr()).lat.read().bits() & (1 << $i) != 0 })
+                        Ok(unsafe { (*$PORTX::ptr()).port.read().bits() & (1 << $i) != 0 })
                     }
 
                     fn is_low(&mut self) -> Result<bool, Self::Error> {
-                        Ok(unsafe { (*$PORTX::ptr()).lat.read().bits() & (1 << $i) == 0 })
+                        Ok(unsafe { (*$PORTX::ptr()).port.read().bits() & (1 << $i) == 0 })
                     }
                 }
 

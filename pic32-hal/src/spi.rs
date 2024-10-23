@@ -3,7 +3,7 @@
 use crate::pac::{SPI1, SPI2};
 use core::{cmp::max, slice};
 use embedded_hal::spi::{ErrorKind, ErrorType, SpiBus};
-pub use embedded_hal::spi::{Mode, Phase, Polarity};
+pub use embedded_hal::spi::{Mode, Phase, Polarity, MODE_0, MODE_1, MODE_2, MODE_3};
 
 /// SPI error
 pub type Error = ErrorKind;
