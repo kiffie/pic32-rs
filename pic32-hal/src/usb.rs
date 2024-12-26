@@ -562,7 +562,7 @@ impl usb_device::bus::UsbBus for UsbBus {
             inner.usb.u1ir.write(|w| w.urstif_detachif().bit(true));
             inner.pr_out = 0;
             let ep0_out = inner.ecb[0][0].as_mut().unwrap();
-            let _ = ep0_out.arm_generic(ep0_out.ep_size as usize,false);
+            let _ = ep0_out.arm_generic(ep0_out.ep_size as usize, false);
 
             return PollResult::Reset;
             // return PollResult::None;
