@@ -12,7 +12,6 @@ use core::cell::RefCell;
 use core::pin::Pin;
 use core::ptr::{read_volatile, write_volatile};
 use core::slice;
-use log::debug;
 
 use mips_mcu::PhysicalAddress;
 use mips_mcu::fmt::virt_to_phys;
@@ -388,7 +387,6 @@ impl usb_device::bus::UsbBus for UsbBus {
         ep_size: u16,
         _interval: u8,
     ) -> Result<EndpointAddress> {
-        debug!("alloc_ep: dir={ep_dir:?}, addr={ep_addr:?}, type={ep_type:?}, size={ep_size}");
         let mut inner = self.0.borrow_mut();
         let addr = if let Some(a) = ep_addr {
             // consistency check for ep_dir
@@ -432,13 +430,11 @@ impl usb_device::bus::UsbBus for UsbBus {
         if addr.is_out() {
             let ecb = inner.ecb[ep][dir].as_mut().unwrap();
             ecb.arm_generic(ep_size as usize, false)?;
-            //ecb.arm_generic(ep_size as usize, false)?;
         }
         Ok(addr)
     }
 
     fn enable(&mut self) {
-        debug!("enable");
         let inner = self.0.borrow();
 
         // Enable interrupts required to call the poll function from an ISR
@@ -452,7 +448,6 @@ impl usb_device::bus::UsbBus for UsbBus {
     }
 
     fn reset(&self) {
-        debug!("reset");
         let mut inner = self.0.borrow_mut();
         if let Some(ref mut ecb) = inner.ecb[0][0] {
             ecb.clear_completed();
@@ -460,7 +455,6 @@ impl usb_device::bus::UsbBus for UsbBus {
     }
 
     fn set_device_address(&self, addr: u8) {
-        debug!("set address = {addr}");
         let inner = self.0.borrow();
         inner
             .usb
@@ -469,7 +463,6 @@ impl usb_device::bus::UsbBus for UsbBus {
     }
 
     fn write(&self, ep_addr: EndpointAddress, buf: &[u8]) -> udev::Result<usize> {
-        debug!("write: len = {}", buf.len());
         let ep = ep_addr.index();
         if ep >= N_ENDPOINTS {
             return Err(UsbError::InvalidEndpoint);
@@ -492,7 +485,6 @@ impl usb_device::bus::UsbBus for UsbBus {
         let len = ecb.read(buf)?;
         inner.pr_out &= !(1 << ep);
         inner.pr_su &= !(1 << ep);
-        debug!("read: len = {len}");
         Ok(len)
     }
 
@@ -568,7 +560,6 @@ impl usb_device::bus::UsbBus for UsbBus {
         if inner.usb.u1ir.read().urstif_detachif().bit() {
             inner.usb.u1addr.write(unsafe { |w| w.bits(0) });
             inner.usb.u1ir.write(|w| w.urstif_detachif().bit(true));
-            debug!("poll reset");
             inner.pr_out = 0;
             let ep0_out = inner.ecb[0][0].as_mut().unwrap();
             let _ = ep0_out.arm_generic(ep0_out.ep_size as usize,false);
@@ -581,10 +572,6 @@ impl usb_device::bus::UsbBus for UsbBus {
             inner.usb.u1ir.write(|w| w.stallif().bit(true));
         }
         if inner.pr_out != 0 || pr_in != 0 || inner.pr_su != 0 {
-            debug!("poll data: out = {:02x}, in_complete = {:02x}, setup = {:02x}",
-                inner.pr_out,
-                pr_in,
-                inner.pr_su);
             PollResult::Data {
                 ep_out: inner.pr_out,
                 ep_in_complete: pr_in,
