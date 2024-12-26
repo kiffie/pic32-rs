@@ -11,7 +11,7 @@
 #![no_main]
 #![feature(alloc_error_handler)]
 
-use embedded_hal::digital::v2::*;
+use embedded_hal::digital::{OutputPin, StatefulOutputPin};
 use mips_mcu_alloc::MipsMcuHeap;
 use mips_rt::entry;
 use panic_halt as _;
@@ -92,9 +92,10 @@ fn main() -> ! {
     let mut serial = usbd_serial::SerialPort::new(&usb_bus);
 
     let mut usb_dev = UsbDeviceBuilder::new(&usb_bus, UsbVidPid(0x16c0, 0x27dd))
-        .manufacturer("Fake company")
-        .product("Serial port")
-        .serial_number("TEST")
+        .strings(&[StringDescriptors::new(LangID::EN)
+            .manufacturer("Fake company")
+            .product("Serial port")
+            .serial_number("TEST")]).unwrap()
         .device_class(usbd_serial::USB_CLASS_CDC)
         .build();
 

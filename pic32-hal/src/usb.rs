@@ -170,7 +170,7 @@ impl EndpointControlBlock {
         }
         epreg |= match ep_type {
             EndpointType::Control => EPREG_EPHSHK_MASK,
-            EndpointType::Isochronous => EPREG_EPCONDIS_MASK,
+            EndpointType::Isochronous { synchronization: _, usage: _ } => EPREG_EPCONDIS_MASK,
             EndpointType::Bulk | EndpointType::Interrupt => EPREG_EPCONDIS_MASK | EPREG_EPHSHK_MASK,
         };
         unsafe { UsbBus::write_epreg(ep, epreg) };
@@ -222,9 +222,10 @@ impl EndpointControlBlock {
         }
         bd.set_buffer_address(virt_to_phys(self.ep_buf[self.next_odd as usize]));
         bd.set_byte_count(len as u16);
+        let is_iso_ep = matches!(self.ep_type, EndpointType::Isochronous { synchronization: _, usage: _ });
         bd.set_flags( BD_UOWN | 
                       if self.data01 { BD_DATA01 } else { 0 } |
-                      if self.ep_type == EndpointType::Isochronous { 0 } else { BD_DTS } |
+                      if is_iso_ep { 0 } else { BD_DTS } |
                       if stall { BD_STALL } else { 0 } );
         if stall {
             self.stalled = true;
@@ -232,7 +233,7 @@ impl EndpointControlBlock {
             self.next_odd = !self.next_odd;
             self.armed_ctr += 1;
         }
-        if self.ep_type != EndpointType::Isochronous {
+        if is_iso_ep {
             self.data01 = !self.data01;
         }
         Ok(len)
