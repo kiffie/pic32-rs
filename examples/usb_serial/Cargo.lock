@@ -82,6 +82,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9afa463f5405ee81cdb9cc2baf37e08ec7e4c8209442b5d72c04cfb2cd6e6286"
 
 [[package]]
+name = "log"
+version = "0.4.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
+
+[[package]]
 name = "mips-mcu"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -138,12 +144,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d5439c4ad607c3c23abf66de8c8bf57ba8adcd1f129e699851a6e43935d339d"
 
 [[package]]
-name = "panic-halt"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a513e167849a384b7f9b746e517604398518590a9142f4846a32e3c2a4de7b11"
-
-[[package]]
 name = "pic32-config-sector"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -157,11 +157,12 @@ dependencies = [
  "embedded-hal 0.2.7",
  "embedded-hal 1.0.0",
  "enumflags2",
+ "log",
  "mips-mcu",
  "mips-rt",
  "nb 1.1.0",
  "pic32mx2xx",
- "usb-device",
+ "usb-device 0.3.2",
 ]
 
 [[package]]
@@ -224,6 +225,12 @@ checksum = "adb9e6ca4f869e1180728b7950e35922a7fc6397f7b641499e8f3ef06e50dc83"
 
 [[package]]
 name = "usb-device"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f6cc3adc849b5292b4075fc0d5fdcf2f24866e88e336dd27a8943090a520508"
+
+[[package]]
+name = "usb-device"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98816b1accafbb09085168b90f27e93d790b4bfa19d883466b5e53315b5f06a6"
@@ -233,17 +240,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "usb-log"
+version = "0.1.0"
+dependencies = [
+ "critical-section",
+ "log",
+ "usb-device 0.2.9",
+]
+
+[[package]]
 name = "usb_serial"
 version = "0.3.0"
 dependencies = [
+ "critical-section",
+ "embedded-hal 0.2.7",
  "embedded-hal 1.0.0",
+ "log",
  "mips-mcu",
  "mips-mcu-alloc",
  "mips-rt",
- "panic-halt",
  "pic32-config-sector",
  "pic32-hal",
- "usb-device",
+ "usb-device 0.3.2",
+ "usb-log",
  "usbd-serial",
 ]
 
@@ -256,7 +275,7 @@ dependencies = [
  "embedded-hal 0.2.7",
  "embedded-io",
  "nb 1.1.0",
- "usb-device",
+ "usb-device 0.3.2",
 ]
 
 [[package]]
