@@ -11,20 +11,12 @@
 #![no_main]
 #![feature(alloc_error_handler)]
 
-mod timer1_isr;
-use timer1_isr::Timer1Isr;
-
-extern crate alloc;
-
-use embedded_hal::{digital::{OutputPin, StatefulOutputPin}, delay::DelayNs};
+use embedded_hal::digital::{OutputPin, StatefulOutputPin};
 use mips_mcu_alloc::MipsMcuHeap;
 use mips_rt::entry;
-// use panic_halt as _;
-use pic32_hal::{clock::Osc, coretimer::Delay, gpio::GpioExt, int::Int, pac, pps::{MapPin, NoPin, PpsExt}, time::Hertz, uart::Uart, usb::UsbBus};
+use panic_halt as _;
+use pic32_hal::{gpio::GpioExt, pac, usb::UsbBus};
 use usb_device::prelude::*;
-use usb_log::log_buffer::LogBuffer;
-use log::debug;
-use embedded_hal_02::serial::Write;
 
 #[cfg(feature = "pic32mx2x4fxxxb")]
 use pic32_config_sector::pic32mx2x4::*;
@@ -85,61 +77,17 @@ pub static CONFIGSFRS: ConfigSector = ConfigSector::default()
 #[global_allocator]
 static ALLOCATOR: MipsMcuHeap = MipsMcuHeap::empty();
 
-static LOG_BUFFER: LogBuffer<4096> = LogBuffer::new();
-
-const SYS_CLOCK: Hertz = Hertz(48_000_000);
-
 #[entry]
 fn main() -> ! {
     // Initialize the allocator BEFORE you use it
     ALLOCATOR.init();
-    log::set_logger(&LOG_BUFFER).unwrap();
-    log::set_max_level(log::LevelFilter::Trace);
-
-    unsafe {
-        mips_mcu::interrupt::enable();
-    }
 
     let p = pac::Peripherals::take().unwrap();
 
     let parts = p.PORTB.split();
-    let vpins = p.PPS.split();
-    let clock = Osc::new(p.OSC, SYS_CLOCK);
-    let int = Int::new(p.INT);
-    let mut delay = Delay::new(SYS_CLOCK);
-
     let mut led = parts.rb5.into_push_pull_output();
     led.set_high().unwrap();
 
-    // #[cfg(feature = "uart-logger")]
-    let _timer1_isr = {
-        let rxd = NoPin::new().map_pin(vpins.inputs.u2rx);
-        let txd = parts
-            .rb0
-            .into_push_pull_output()
-            .map_pin(vpins.outputs.u2tx);
-        //let uart = Uart::uart2(p.UART2, &clock, 921600, rxd, txd);
-        let uart = Uart::uart2(p.UART2, &clock, 115200, rxd, txd);
-        delay.delay_ms(100);
-
-        let (mut tx, _) = uart.split();
-        let mut timer1_isr = Timer1Isr::new(p.TMR1);
-        let mut log_byte = None;
-        timer1_isr.start(&int, move || {
-            if log_byte.is_none() {
-                log_byte = LOG_BUFFER.read();
-            }
-            if let Some(byte) = log_byte {
-                if !tx.write(byte).is_err() {
-                    log_byte = None;
-                }
-            }
-        });
-        timer1_isr
-    };
-
-
-    debug!("USB test");
     let usb_bus = UsbBus::new(p.USB);
     let mut serial = usbd_serial::SerialPort::new(&usb_bus);
 
@@ -147,12 +95,11 @@ fn main() -> ! {
         .strings(&[StringDescriptors::new(LangID::EN)
             .manufacturer("Fake company")
             .product("Serial port")
-            .serial_number("TEST")]).unwrap()
-        .max_packet_size_0(8).unwrap()
+            .serial_number("TEST")])
+        .unwrap()
         .device_class(usbd_serial::USB_CLASS_CDC)
         .build();
 
-    debug!("USB test - entering loop");
     loop {
         if !usb_dev.poll(&mut [&mut serial]) {
             continue;
