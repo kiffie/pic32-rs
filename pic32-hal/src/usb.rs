@@ -12,9 +12,10 @@ use core::cell::RefCell;
 use core::pin::Pin;
 use core::ptr::{read_volatile, write_volatile};
 use core::slice;
+use critical_section::Mutex;
 
-use mips_mcu::PhysicalAddress;
 use mips_mcu::fmt::virt_to_phys;
+use mips_mcu::PhysicalAddress;
 
 use crate::pac::USB;
 
@@ -129,6 +130,8 @@ struct EndpointControlBlock {
     bd: *mut [BufferDescriptor; 2],
 }
 
+unsafe impl Send for EndpointControlBlock {}
+
 impl EndpointControlBlock {
     fn alloc(
         ep_size: u16,
@@ -170,7 +173,7 @@ impl EndpointControlBlock {
         }
         epreg |= match ep_type {
             EndpointType::Control => EPREG_EPHSHK_MASK,
-            EndpointType::Isochronous => EPREG_EPCONDIS_MASK,
+            EndpointType::Isochronous { synchronization: _, usage: _ } => EPREG_EPCONDIS_MASK,
             EndpointType::Bulk | EndpointType::Interrupt => EPREG_EPCONDIS_MASK | EPREG_EPHSHK_MASK,
         };
         unsafe { UsbBus::write_epreg(ep, epreg) };
@@ -222,9 +225,10 @@ impl EndpointControlBlock {
         }
         bd.set_buffer_address(virt_to_phys(self.ep_buf[self.next_odd as usize]));
         bd.set_byte_count(len as u16);
+        let is_iso_ep = matches!(self.ep_type, EndpointType::Isochronous { synchronization: _, usage: _ });
         bd.set_flags( BD_UOWN | 
                       if self.data01 { BD_DATA01 } else { 0 } |
-                      if self.ep_type == EndpointType::Isochronous { 0 } else { BD_DTS } |
+                      if is_iso_ep { 0 } else { BD_DTS } |
                       if stall { BD_STALL } else { 0 } );
         if stall {
             self.stalled = true;
@@ -232,17 +236,17 @@ impl EndpointControlBlock {
             self.next_odd = !self.next_odd;
             self.armed_ctr += 1;
         }
-        if self.ep_type != EndpointType::Isochronous {
+        if !is_iso_ep {
             self.data01 = !self.data01;
         }
         Ok(len)
     }
 
-//     fn stall(&mut self) {
-//         if self.ep_addr.is_in() {
-//             self.arm_generic(0, true);
-//         }
-//     }
+    //     fn stall(&mut self) {
+    //         if self.ep_addr.is_in() {
+    //             self.arm_generic(0, true);
+    //         }
+    //     }
 
     /// Cancel all pending (submitted and completed) transactions.
     /// Must be called with transactions disabled and the h/w FIFO flushed,
@@ -298,10 +302,14 @@ impl EndpointControlBlock {
 impl Drop for EndpointControlBlock {
     fn drop(&mut self) {
         unsafe {
-            dealloc(self.ep_buf[0],
-                    Layout::from_size_align_unchecked(self.ep_size as usize, 1));
-            dealloc(self.ep_buf[1],
-                    Layout::from_size_align_unchecked(self.ep_size as usize, 1));
+            dealloc(
+                self.ep_buf[0],
+                Layout::from_size_align_unchecked(self.ep_size as usize, 1),
+            );
+            dealloc(
+                self.ep_buf[1],
+                Layout::from_size_align_unchecked(self.ep_size as usize, 1),
+            );
         }
     }
 }
@@ -317,14 +325,13 @@ struct UsbInner {
 }
 
 /// Usb bus driver to be used with the usb-device crate.
-pub struct UsbBus(RefCell<UsbInner>);
-
-unsafe impl Sync for UsbBus {}
+pub struct UsbBus(Mutex<RefCell<UsbInner>>);
 
 impl UsbBus {
     /// Create a new UsbBus. Uses the heap for allocating the various buffers.
     pub fn new(usb: USB) -> UsbBusAllocator<Self> {
         usb.u1con.write(unsafe { |w| w.bits(0) }); // first turn USB off
+        usb.u1ie.write(unsafe { |w| w.bits(0) });
         //turn off VUSB, disable special USB OTG functions
         usb.u1otgcon.write(unsafe { |w| w.bits(0) });
         usb.u1pwrc.write(|w| w.usbpwr().bit(true));
@@ -341,14 +348,30 @@ impl UsbBus {
         usb.u1bdtp2.write(unsafe { |w| w.bits(dma_addr >> 16) });
         usb.u1bdtp1.write(unsafe { |w| w.bits(dma_addr >> 8) });
 
-        let bus = UsbBus(RefCell::new(UsbInner {
+        let bus = UsbBus(Mutex::new(RefCell::new(UsbInner {
             bdt,
             usb,
             ecb: Ecb::default(),
             pr_out: 0,
             pr_su: 0,
-        }));
+        })));
         UsbBusAllocator::new(bus)
+    }
+
+    /// Enable Start Of Frame IRQ.
+    pub fn enable_sof_irq(&self) {
+        critical_section::with(|cs| {
+            let inner = self.0.borrow_ref_mut(cs);
+            inner.usb.u1ieset.write(|w| w.sofie().bit(true));
+        });
+    }
+
+    /// Disable Start Of Frame IRQ.
+    pub fn disable_sof_irq(&self) {
+        critical_section::with(|cs| {
+            let inner = self.0.borrow_ref_mut(cs);
+            inner.usb.u1ieclr.write(|w| w.sofie().bit(true));
+        });
     }
 
     /// write to endpoint control register
@@ -368,9 +391,11 @@ impl UsbBus {
 
 impl Drop for UsbBus {
     fn drop(&mut self) {
-        let usb = &self.0.borrow_mut().usb;
-        usb.u1ie.write(unsafe { |w| w.bits(0) });
-        usb.u1pwrc.write(unsafe { |w| w.bits(0) });
+        critical_section::with(|cs| {
+            let usb = &self.0.borrow_ref(cs).usb;
+            usb.u1ie.write(unsafe { |w| w.bits(0) });
+            usb.u1pwrc.write(unsafe { |w| w.bits(0) });
+        });
     }
 }
 
@@ -386,80 +411,86 @@ impl usb_device::bus::UsbBus for UsbBus {
         ep_size: u16,
         _interval: u8,
     ) -> Result<EndpointAddress> {
-        let mut inner = self.0.borrow_mut();
-        let addr = if let Some(a) = ep_addr {
-            // consistency check for ep_dir
-            if a.direction() != ep_dir {
-                return Err(UsbError::InvalidEndpoint);
-            }
-            // range check
-            let ep = a.index();
-            if ep >= N_ENDPOINTS {
-                return Err(UsbError::EndpointOverflow);
-            }
-            // check if endpoint is already in use
-            let dir = (a.direction() as u8 >> 7) as usize;
-            if inner.ecb[ep][dir].is_some() {
-                return Err(UsbError::InvalidEndpoint);
-            }
-            a
-        } else {
-            // find a free endpoint starting with EP1
-            let dir = (ep_dir as u8 >> 7) as usize;
-            let mut addr = None;
-            for ep in 1..N_ENDPOINTS {
-                if inner.ecb[ep][dir].is_none() {
-                    addr = Some(EndpointAddress::from_parts(ep, ep_dir));
-                    break;
+        critical_section::with(|cs| {
+            let mut inner = self.0.borrow_ref_mut(cs);
+            let addr = if let Some(a) = ep_addr {
+                // consistency check for ep_dir
+                if a.direction() != ep_dir {
+                    return Err(UsbError::InvalidEndpoint);
                 }
-            }
-            match addr {
-                Some(a) => a,
-                None => return Err(UsbError::EndpointOverflow),
-            }
-        };
-        let ep = addr.index();
-        let dir = addr.direction() as usize >> 7;
+                // range check
+                let ep = a.index();
+                if ep >= N_ENDPOINTS {
+                    return Err(UsbError::EndpointOverflow);
+                }
+                // check if endpoint is already in use
+                let dir = (a.direction() as u8 >> 7) as usize;
+                if inner.ecb[ep][dir].is_some() {
+                    return Err(UsbError::InvalidEndpoint);
+                }
+                a
+            } else {
+                // find a free endpoint starting with EP1
+                let dir = (ep_dir as u8 >> 7) as usize;
+                let mut addr = None;
+                for ep in 1..N_ENDPOINTS {
+                    if inner.ecb[ep][dir].is_none() {
+                        addr = Some(EndpointAddress::from_parts(ep, ep_dir));
+                        break;
+                    }
+                }
+                match addr {
+                    Some(a) => a,
+                    None => return Err(UsbError::EndpointOverflow),
+                }
+            };
+            let ep = addr.index();
+            let dir = addr.direction() as usize >> 7;
 
-        // initialize buffer descriptors and endpoint control block
-        let bd_pair = unsafe { &mut inner.bdt.ep_dir_ppbi[ep][dir] };
-        let ecb = EndpointControlBlock::alloc(ep_size, ep_type, addr, bd_pair)?;
-        inner.ecb[ep][dir] = Some(ecb);
-        //if ep_type == EndpointType::Control && addr.is_out() {
-        if addr.is_out() {
-            let ecb = inner.ecb[ep][dir].as_mut().unwrap();
-            ecb.arm_generic(ep_size as usize, false)?;
-            //ecb.arm_generic(ep_size as usize, false)?;
-        }
-        Ok(addr)
+            // initialize buffer descriptors and endpoint control block
+            let bd_pair = unsafe { &mut inner.bdt.ep_dir_ppbi[ep][dir] };
+            let ecb = EndpointControlBlock::alloc(ep_size, ep_type, addr, bd_pair)?;
+            inner.ecb[ep][dir] = Some(ecb);
+            //if ep_type == EndpointType::Control && addr.is_out() {
+            if addr.is_out() {
+                let ecb = inner.ecb[ep][dir].as_mut().unwrap();
+                ecb.arm_generic(ep_size as usize, false)?;
+            }
+            Ok(addr)
+        })
     }
 
     fn enable(&mut self) {
-        let inner = self.0.borrow();
-
-        // Enable interrupts required to call the poll function from an ISR
-        // To use the interrupts, the interrupt controller must be configured
-        // as well.
-        inner.usb.u1ie.write(|w| w
-            .trnie().bit(true)
-            .stallie().bit(true)
-            .urstie_detachie().bit(true));
-        inner.usb.u1con.write(|w| w.usben_sofen().bit(true));
+        critical_section::with(|cs| {
+            let inner = self.0.borrow_ref(cs);
+            // Enable interrupts required to call the poll function from an ISR
+            // To use the interrupts, the interrupt controller must be configured
+            // as well.
+            inner.usb.u1ieset.write(|w| w
+                .trnie().bit(true)
+                .stallie().bit(true)
+                .urstie_detachie().bit(true));
+            inner.usb.u1con.write(|w| w.usben_sofen().bit(true));
+        })
     }
 
     fn reset(&self) {
-        let mut inner = self.0.borrow_mut();
-        if let Some(ref mut ecb) = inner.ecb[0][0] {
-            ecb.clear_completed();
-        }
+        critical_section::with(|cs| {
+            let mut inner = self.0.borrow_ref_mut(cs);
+            if let Some(ref mut ecb) = inner.ecb[0][0] {
+                ecb.clear_completed();
+            }
+        });
     }
 
     fn set_device_address(&self, addr: u8) {
-        let inner = self.0.borrow();
-        inner
-            .usb
-            .u1addr
-            .write(|w| unsafe { w.bits((addr & 0x7f) as u32) });
+        critical_section::with(|cs| {
+            let inner = self.0.borrow_ref_mut(cs);
+            inner
+                .usb
+                .u1addr
+                .write(|w| unsafe { w.bits((addr & 0x7f) as u32) });
+        });
     }
 
     fn write(&self, ep_addr: EndpointAddress, buf: &[u8]) -> udev::Result<usize> {
@@ -467,12 +498,14 @@ impl usb_device::bus::UsbBus for UsbBus {
         if ep >= N_ENDPOINTS {
             return Err(UsbError::InvalidEndpoint);
         }
-        let dir = ep_addr.is_in() as usize;
-        let mut inner = self.0.borrow_mut();
-        let ecb = inner.ecb[ep][dir]
-            .as_mut()
-            .ok_or(UsbError::InvalidEndpoint)?;
-        ecb.write(buf)
+        critical_section::with(|cs| {
+            let mut inner = self.0.borrow_ref_mut(cs);
+            let dir = ep_addr.is_in() as usize;
+            let ecb = inner.ecb[ep][dir]
+                .as_mut()
+                .ok_or(UsbError::InvalidEndpoint)?;
+            ecb.write(buf)
+        })
     }
 
     fn read(&self, ep_addr: EndpointAddress, buf: &mut [u8]) -> udev::Result<usize> {
@@ -480,12 +513,14 @@ impl usb_device::bus::UsbBus for UsbBus {
         if ep >= N_ENDPOINTS || ep_addr.direction() != UsbDirection::Out {
             return Err(UsbError::InvalidEndpoint);
         }
-        let mut inner = self.0.borrow_mut();
-        let ecb = inner.ecb[ep][0].as_mut().ok_or(UsbError::InvalidEndpoint)?;
-        let len = ecb.read(buf)?;
-        inner.pr_out &= !(1 << ep);
-        inner.pr_su &= !(1 << ep);
-        Ok(len)
+        critical_section::with(|cs| {
+            let mut inner = self.0.borrow_ref_mut(cs);
+            let ecb = inner.ecb[ep][0].as_mut().ok_or(UsbError::InvalidEndpoint)?;
+            let len = ecb.read(buf)?;
+            inner.pr_out &= !(1 << ep);
+            inner.pr_su &= !(1 << ep);
+            Ok(len)
+        })
     }
 
     fn set_stalled(&self, ep_addr: EndpointAddress, stalled: bool) {
@@ -506,74 +541,80 @@ impl usb_device::bus::UsbBus for UsbBus {
     fn resume(&self) {}
 
     fn poll(&self) -> PollResult {
-        let mut inner = self.0.borrow_mut();
-        let mut pr_in = 0u16;
-        let u1eir = inner.usb.u1eir.read().bits();
-        if u1eir != 0 {
-            inner.usb.u1eir.write(|w| unsafe { w.bits(u1eir) });
-        }
-        while inner.usb.u1ir.read().trnif().bit() {
-            let u1stat = inner.usb.u1stat.read().bits(); // copy status
-            inner.usb.u1ir.write(|w| w.trnif().bit(true)); // clear IRQ flag
-            let ep = ((u1stat & U1STAT_ENDPT_MASK) >> U1STAT_ENDPT_POSITION) as usize;
-            let dir = ((u1stat & U1STAT_DIR_MASK) >> U1STAT_DIR_POSITION) as usize;
-            let bdt_index = (u1stat >> 2) as usize;
-            let bd_flags = unsafe { inner.bdt.flat[bdt_index].flags() };
-            let pid = ((bd_flags & BD_PID_MSK) >> BD_PID_POS) as u8;
-            //debug!("pid = {}, ep = {}, dir = {}", pid, ep, dir);
-            match pid {
-                USB_PID_OUT => {
-                    if let Some(ref mut ecb) = inner.ecb[ep][dir] {
-                        ecb.complete_ctr += 1;
-                        ecb.armed_ctr -= 1;
+        critical_section::with(|cs| {
+            let mut inner = self.0.borrow_ref_mut(cs);
+            let mut pr_in = 0u16;
+            let u1eir = inner.usb.u1eir.read().bits();
+            if u1eir != 0 {
+                inner.usb.u1ir.write(|w| unsafe { w.bits(u1eir) });
+            }
+            inner.usb.u1ir.write(|w| w.sofif().bit(true));
+            while inner.usb.u1ir.read().trnif().bit() {
+                let u1stat = inner.usb.u1stat.read().bits(); // copy status
+                inner.usb.u1ir.write(|w| w.trnif().bit(true)); // clear IRQ flag
+                let ep = ((u1stat & U1STAT_ENDPT_MASK) >> U1STAT_ENDPT_POSITION) as usize;
+                let dir = ((u1stat & U1STAT_DIR_MASK) >> U1STAT_DIR_POSITION) as usize;
+                let bdt_index = (u1stat >> 2) as usize;
+                let bd_flags = unsafe { inner.bdt.flat[bdt_index].flags() };
+                let pid = ((bd_flags & BD_PID_MSK) >> BD_PID_POS) as u8;
+                //debug!("pid = {}, ep = {}, dir = {}", pid, ep, dir);
+                match pid {
+                    USB_PID_OUT => {
+                        if let Some(ref mut ecb) = inner.ecb[ep][dir] {
+                            ecb.complete_ctr += 1;
+                            ecb.armed_ctr -= 1;
+                        }
+                        inner.pr_out |= 1 << ep;
                     }
-                    inner.pr_out |= 1 << ep;
-                }
-                USB_PID_IN => {
-                    pr_in |= 1 << ep;
-                    if let Some(ref mut ecb) = inner.ecb[ep][dir] {
-                        ecb.armed_ctr -= 1;
+                    USB_PID_IN => {
+                        pr_in |= 1 << ep;
+                        if let Some(ref mut ecb) = inner.ecb[ep][dir] {
+                            ecb.armed_ctr -= 1;
+                        }
                     }
-                }
-                USB_PID_SETUP => {
-                    // stop any previously submitted IN transactions
-                    if let Some(ref mut ecb_in) = inner.ecb[ep][1] {
-                        ecb_in.cancel();
-                    }
-                    let ecb_out = inner.ecb[ep][0].as_mut().unwrap();
-                    // delete already received but undelivered OUT transactions
-                    ecb_out.clear_completed();
+                    USB_PID_SETUP => {
+                        // stop any previously submitted IN transactions
+                        if let Some(ref mut ecb_in) = inner.ecb[ep][1] {
+                            ecb_in.cancel();
+                        }
+                        let ecb_out = inner.ecb[ep][0].as_mut().unwrap();
+                        // delete already received but undelivered OUT transactions
+                        ecb_out.clear_completed();
 
-                    ecb_out.complete_ctr += 1;
-                    ecb_out.armed_ctr -= 1;
-                    inner.pr_su |= 1 << ep;
-                    inner.ecb[ep][0].as_mut().unwrap().data01 = true;
-                    inner.ecb[ep][1].as_mut().unwrap().data01 = true;
-                    // the USB modules automatically disables USB transactions
-                    // after a SETUP transaction. Enable them again.
-                    inner.usb.u1conclr.write(|w| w.pktdis_tokbusy().bit(true));
-                }
-                _ => {
+                        ecb_out.complete_ctr += 1;
+                        ecb_out.armed_ctr -= 1;
+                        inner.pr_su |= 1 << ep;
+                        inner.ecb[ep][0].as_mut().unwrap().data01 = true;
+                        inner.ecb[ep][1].as_mut().unwrap().data01 = true;
+                        // the USB modules automatically disables USB transactions
+                        // after a SETUP transaction. Enable them again.
+                        inner.usb.u1conclr.write(|w| w.pktdis_tokbusy().bit(true));
+                    }
+                    _ => {}
                 }
             }
-        }
-        if inner.usb.u1ir.read().urstif_detachif().bit() {
-            inner.usb.u1addr.write(unsafe { |w| w.bits(0) });
-            inner.usb.u1ir.write(|w| w.urstif_detachif().bit(true));
-            return PollResult::Reset;
-        }
-        if inner.usb.u1ir.read().stallif().bit() {
-            inner.usb.u1ep0clr.write(|w| w.epstall().bit(true));
-            inner.usb.u1ir.write(|w| w.stallif().bit(true));
-        }
-        if inner.pr_out != 0 || pr_in != 0 || inner.pr_su != 0 {
-            PollResult::Data {
-                ep_out: inner.pr_out,
-                ep_in_complete: pr_in,
-                ep_setup: inner.pr_su,
+            if inner.usb.u1ir.read().urstif_detachif().bit() {
+                inner.usb.u1addr.write(unsafe { |w| w.bits(0) });
+                inner.usb.u1ir.write(|w| w.urstif_detachif().bit(true));
+                inner.pr_out = 0;
+                let ep0_out = inner.ecb[0][0].as_mut().unwrap();
+                let _ = ep0_out.arm_generic(ep0_out.ep_size as usize, false);
+
+                return PollResult::Reset;
             }
-        } else {
-            PollResult::None
-        }
+            if inner.usb.u1ir.read().stallif().bit() {
+                inner.usb.u1ep0clr.write(|w| w.epstall().bit(true));
+                inner.usb.u1ir.write(|w| w.stallif().bit(true));
+            }
+            if inner.pr_out != 0 || pr_in != 0 || inner.pr_su != 0 {
+                PollResult::Data {
+                    ep_out: inner.pr_out,
+                    ep_in_complete: pr_in,
+                    ep_setup: inner.pr_su,
+                }
+            } else {
+                PollResult::None
+            }
+        })
     }
 }
