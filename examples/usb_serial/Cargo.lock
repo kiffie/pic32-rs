@@ -152,6 +152,7 @@ checksum = "c5dfd36f1915570f83a10b3fda6f8c4aab461078281b99fc3ca9585cebd91420"
 [[package]]
 name = "pic32-hal"
 version = "0.12.1"
+source = "git+https://github.com/kiffie/pic32-rs.git?branch=usb03#98c7dd5689b7c63f552d7f2440664152c913cb24"
 dependencies = [
  "critical-section",
  "embedded-hal 0.2.7",

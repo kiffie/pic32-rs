@@ -25,3 +25,6 @@ pic32-config-sector = "0.3.0"
 opt-level = 3
 lto = true
 debug = true
+
+[patch.crates-io]
+pic32-hal = { git = "https://github.com/kiffie/pic32-rs.git", branch = "usb03"}
