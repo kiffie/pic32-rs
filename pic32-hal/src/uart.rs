@@ -1,5 +1,6 @@
 //! UART driver
 
+use core::convert::Infallible;
 use core::fmt;
 use core::marker::PhantomData;
 
@@ -8,6 +9,7 @@ use crate::pac::{UART1, UART2};
 use crate::pps::{input, output, IsConnected, MappedPin};
 
 use embedded_hal_0_2::prelude::*;
+use embedded_io::{ReadReady, WriteReady};
 use nb::block;
 
 /// Uart
@@ -25,6 +27,28 @@ pub struct Rx<UART> {
 /// Uart transmitter
 pub struct Tx<UART> {
     _uart: PhantomData<UART>,
+}
+
+/// UART read errors
+#[derive(Debug)]
+pub enum ReadError {
+    /// RX FIFO overrun
+    Overrun,
+
+    /// Parity error
+    Parity,
+
+    /// Framing error
+    Framing,
+
+    /// Break detected
+    Break,
+}
+
+impl embedded_io::Error for ReadError {
+    fn kind(&self) -> embedded_io::ErrorKind {
+        embedded_io::ErrorKind::Other
+    }
 }
 
 macro_rules! uart_impl {
@@ -138,6 +162,140 @@ macro_rules! uart_impl {
                     unsafe { (*$Uart::ptr()).staclr.write(|w| w.oerr().bit(true)) }
                 }
                 result
+            }
+        }
+
+        impl embedded_io::ErrorType for Tx<$Uart> {
+            type Error = Infallible;
+        }
+
+        impl embedded_io::WriteReady for Tx<$Uart> {
+            fn write_ready(&mut self) -> Result<bool, Self::Error> {
+                let utxbf = unsafe { (*$Uart::ptr()).sta.read().utxbf().bit() };
+                Ok(!utxbf)
+            }
+        }
+
+        impl embedded_io::Write for Tx<$Uart> {
+            fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+                while !self.write_ready()? {}
+                let mut len = 0;
+                for byte in buf {
+                    if !self.write_ready()? {
+                        break;
+                    }
+                    unsafe {
+                        (*$Uart::ptr())
+                            .txreg
+                            .write(|w| w.txreg().bits(*byte as u16));
+                    }
+                    len += 1;
+                }
+                Ok(len)
+            }
+
+            fn flush(&mut self) -> Result<(), Self::Error> {
+                loop {
+                    let trmt = unsafe { (*$Uart::ptr()).sta.read().trmt().bit() };
+                    if !trmt {
+                        break;
+                    }
+                }
+                Ok(())
+            }
+        }
+
+        impl embedded_io::ErrorType for Rx<$Uart> {
+            type Error = ReadError;
+        }
+
+        impl embedded_io::ReadReady for Rx<$Uart> {
+            fn read_ready(&mut self) -> Result<bool, Self::Error> {
+                let data_avail = unsafe { (*$Uart::ptr()).sta.read().urxda().bit() };
+                Ok(data_avail)
+            }
+        }
+
+        impl embedded_io::Read for Rx<$Uart> {
+            fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
+                if buf.is_empty() {
+                    return Ok(0);
+                }
+
+                // check for FIFO overrun
+                if unsafe { (*$Uart::ptr()).sta.read().oerr().bit() } {
+                    // clear overrun error condition and RX FIFO
+                    unsafe {
+                        (*$Uart::ptr()).staclr.write(|w| w.oerr().bit(true));
+                    }
+                    return Err(ReadError::Overrun);
+                }
+
+                // wait until data is available
+                while !self.read_ready()? {}
+
+                // read as many bytes as possible without blocking
+                let mut len = 0;
+                for bufbyte in buf {
+                    if !self.read_ready()? {
+                        break;
+                    }
+                    // check for framing error or break skipping the erroneous byte
+                    if unsafe { (*$Uart::ptr()).sta.read().ferr().bit() } {
+                        let word = unsafe { (*$Uart::ptr()).rxreg.read().bits() };
+                        if word == 0 {
+                            return Err(ReadError::Break);
+                        } else {
+                            return Err(ReadError::Framing);
+                        }
+                    }
+                    // check for parity error skipping the erroneous byte
+                    if unsafe { (*$Uart::ptr()).sta.read().perr().bit() } {
+                        let _skip = unsafe { (*$Uart::ptr()).rxreg.read().bits() };
+                        return Err(ReadError::Parity);
+                    }
+                    *bufbyte = unsafe { (*$Uart::ptr()).rxreg.read().bits() } as u8;
+                    len += 1;
+                }
+                Ok(len)
+            }
+        }
+
+        impl<RX, TX> embedded_io::ErrorType for Uart<$Uart, RX, TX> {
+            type Error = ReadError;
+        }
+
+        impl<RX, TX> embedded_io::WriteReady for Uart<$Uart, RX, TX> {
+            fn write_ready(&mut self) -> Result<bool, Self::Error> {
+                let mut tx: Tx<$Uart> = Tx { _uart: PhantomData };
+                Ok(tx.write_ready().unwrap_or(false))
+            }
+        }
+
+        impl<RX, TX> embedded_io::Write for Uart<$Uart, RX, TX> {
+            fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+                let mut tx: Tx<$Uart> = Tx { _uart: PhantomData };
+                Ok(embedded_io::Write::write(&mut tx, buf).unwrap_or(0))
+            }
+
+            fn flush(&mut self) -> Result<(), Self::Error> {
+                let mut tx: Tx<$Uart> = Tx { _uart: PhantomData };
+                let _ = embedded_io::Write::flush(&mut tx);
+                Ok(())
+            }
+        }
+
+        impl<RX, TX> embedded_io::ReadReady for Uart<$Uart, RX, TX> {
+            fn read_ready(&mut self) -> Result<bool, Self::Error> {
+                let mut rx: Rx<$Uart> = Rx { _uart: PhantomData };
+                rx.read_ready()
+            }
+        }
+
+        impl<RX, TX> embedded_io::Read for Uart<$Uart, RX, TX> {
+            fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error> {
+                let mut rx: Rx<$Uart> = Rx { _uart: PhantomData };
+                embedded_io::Read::read(&mut rx, buf)
             }
         }
     };

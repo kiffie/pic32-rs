@@ -19,9 +19,10 @@ pic32mx47x = ["pic32mx470/pic32mx47xfxxxl", "device-selected"]
 device-selected = []
 
 [dependencies]
-nb = "1.0.0"
+nb = "1.1.0"
 embedded-hal = "1.0.0"
 embedded_hal_0_2 = { package = "embedded-hal", version = "0.2.7", features = ["unproven"] }
+embedded-io = "0.6.1"
 mips-mcu = "0.3.0"
 mips-rt = "0.3.0"
 critical-section = "1.0.0"
