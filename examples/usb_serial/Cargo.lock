@@ -151,12 +151,14 @@ checksum = "c5dfd36f1915570f83a10b3fda6f8c4aab461078281b99fc3ca9585cebd91420"
 
 [[package]]
 name = "pic32-hal"
-version = "0.12.1"
-source = "git+https://github.com/kiffie/pic32-rs.git?branch=usb03#98c7dd5689b7c63f552d7f2440664152c913cb24"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "204e1bdf0d2872346f51bfbb13b760cf7142e0ad82e59d1d52ee10f196652054"
 dependencies = [
  "critical-section",
  "embedded-hal 0.2.7",
  "embedded-hal 1.0.0",
+ "embedded-io",
  "enumflags2",
  "mips-mcu",
  "mips-rt",
@@ -208,9 +210,9 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
 name = "syn"
-version = "2.0.92"
+version = "2.0.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70ae51629bf965c5c098cc9e87908a3df5301051a9e087d6f9bef5c9771ed126"
+checksum = "9c786062daee0d6db1132800e623df74274a0a87322d8e183338e01b3d98d058"
 dependencies = [
  "proc-macro2",
  "quote",
