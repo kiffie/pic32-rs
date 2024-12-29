@@ -10,7 +10,8 @@
 #![no_std]
 
 use core::fmt::Write;
-use embedded_hal::{blocking::delay::DelayMs, digital::v2::*, serial::Read};
+use embedded_hal::{self, delay::DelayNs, digital::OutputPin};
+use embedded_io::{self, Read, ReadReady};
 use mips_rt::{self, entry};
 use panic_halt as _;
 use pic32_config_sector::pic32mx2xx::*;
@@ -21,7 +22,7 @@ use pic32_hal::{
     pac,
     pps::{MapPin, NoPin, PpsExt},
     time::U32Ext,
-    uart::Uart,
+    uart::{Uart, CONFIG_115200_8N1},
 };
 
 // PIC32 configuration registers for PIC32MX1xx and PIC32MX2xx
@@ -67,7 +68,7 @@ fn main() -> ! {
     let rxd = parts.rb1.into_floating_input().map_pin(vpins.inputs.u2rx);
     #[cfg(not(feature = "rx"))]
     let rxd = NoPin::new().map_pin(vpins.inputs.u2rx);
-    let uart = Uart::uart2(p.UART2, &clock, 115200, rxd, txd);
+    let uart = Uart::uart2(p.UART2, &clock, CONFIG_115200_8N1, rxd, txd);
     timer.delay_ms(10u32);
     let (mut tx, mut rx) = uart.split();
     writeln!(tx, "Blinky example").unwrap();
@@ -77,9 +78,11 @@ fn main() -> ! {
         writeln!(tx, "LED status: {}", on).unwrap();
         led.set_state(on.into()).unwrap();
         on = !on;
-        if let Ok(byte) = rx.read() {
-            writeln!(tx, "read char: '{}'", byte as char).unwrap();
+        if rx.read_ready().unwrap() {
+            let mut byte = [0];
+            rx.read(&mut byte).unwrap();
+            writeln!(tx, "read char: '{}'", byte[0] as char).unwrap();
         }
-        timer.delay_ms(1000u32);
+        timer.delay_ms(1000);
     }
 }
