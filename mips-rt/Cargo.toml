@@ -1,6 +1,6 @@
 [package]
 name = "mips-rt"
-version = "0.3.6"
+version = "0.3.7"
 authors = ["Stephan <kiffie@mailbox.org"]
 edition = "2021"
 repository = "https://github.com/kiffie/pic32-rs"
@@ -11,5 +11,5 @@ keywords = ["mips", "pic32", "runtime", "startup"]
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-mips-rt-macros = { path = "macros", version = "0.3.4" }
+mips-rt-macros = { path = "macros", version = "0.3.5" }
 
