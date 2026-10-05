@@ -21,7 +21,9 @@ _isr_context:
         mfc0    k1,_CP0_EPC
         sw      k1,84(sp)
         sw      t0,32(sp)
+        sw      t1,36(sp)
 
+        move    t1,k0
         mfc0    k1,_CP0_CAUSE           # set IRQ priority (IPL) to RIPL
         mfc0    t0,_CP0_STATUS
         sw      t0,88(sp)
@@ -40,7 +42,6 @@ _isr_context:
         sw      a1,20(sp)
         sw      a2,24(sp)
         sw      a3,28(sp)
-        sw      t1,36(sp)
         sw      t2,40(sp)
         sw      t3,44(sp)
         sw      t4,48(sp)
@@ -55,7 +56,7 @@ _isr_context:
         mfhi    t0
         sw      t0,80(sp)
 
-        jalr    k0
+        jalr    t1
         nop
 
         lw t0,  80(sp)
