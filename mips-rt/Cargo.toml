@@ -1,6 +1,6 @@
 [package]
 name = "mips-rt"
-version = "0.3.7"
+version = "0.3.8"
 authors = ["Stephan <kiffie@mailbox.org"]
 edition = "2021"
 repository = "https://github.com/kiffie/pic32-rs"
