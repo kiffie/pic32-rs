@@ -77,7 +77,7 @@ _isr_context:
 #endif
         mtc0    t0,_CP0_STATUS          # IRQs are now enabled again
 
-        sw      $1,SAVE_AT(sp)
+        sw      at_reg,SAVE_AT(sp)
         sw      v0,SAVE_V0(sp)
         sw      v1,SAVE_V1(sp)
         sw      a0,SAVE_A0(sp)
