@@ -433,6 +433,7 @@ impl usb_device::bus::UsbBus for UsbBus {
                 // find a free endpoint starting with EP1
                 let dir = (ep_dir as u8 >> 7) as usize;
                 let mut addr = None;
+                #[allow(clippy::needless_range_loop)]
                 for ep in 1..N_ENDPOINTS {
                     if inner.ecb[ep][dir].is_none() {
                         addr = Some(EndpointAddress::from_parts(ep, ep_dir));
